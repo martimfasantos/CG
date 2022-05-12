@@ -13,6 +13,7 @@ var clock = new THREE.Clock();
 var speed = 3; //units a second
 var delta = 0;
 var orthographicCamera;
+var cameras = [];
 
 function createBall(x, y, z) {
     'use strict';
@@ -82,27 +83,33 @@ function createGeometry1(x, y, z){
 
 function createCamera() {
     'use strict';
-
-    camera = new THREE.PerspectiveCamera( 70,
-                                          window.innerWidth / window.innerHeight,
-                                          1,
-                                          1000);
-                                
+    camera = new THREE.PerspectiveCamera(70,
+                                         window.innerWidth / window.innerHeight,
+                                         1,
+                                         1000);
     camera.position.x = 50;
     camera.position.y = 50;
     camera.position.z = 50;
     camera.lookAt(scene.position);
 
+    return camera;
 }
 
 function createOrthographicCamera(x, y, z) {
     'use strict';
 
-    orthographicCamera = THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 1000);
-    camera.position.x = x;
-    camera.position.y = y;
-    camera.position.z = z;
-    camera.lookAt(scene.position);
+    orthographicCamera = new THREE.OrthographicCamera(window.innerWidth / - 20,
+                                                     window.innerWidth / 20,
+                                                     window.innerHeight / 20, 
+                                                     window.innerHeight / - 20, 
+                                                     1, 
+                                                     1000);
+    orthographicCamera.position.x = x;
+    orthographicCamera.position.y = y;
+    orthographicCamera.position.z = z;
+    orthographicCamera.lookAt(scene.position);
+
+    return orthographicCamera;
 }
 
 function onResize() {
@@ -133,21 +140,14 @@ function onKeyDown(e) {
     'use strict';
 
     switch (e.keyCode) {
-    case 49: //1
-        // creat
-        camera.lookAt(scene.position);
+        case 49: //1
+        camera = cameras[1]
         break;
     case 50: //2
-        camera.position.x = 0;
-        camera.position.y = 50;
-        camera.position.z = 0;
-        camera.lookAt(scene.position);
+        camera = cameras[2]
         break;
     case 51: //3
-        camera.position.x = 50;
-        camera.position.y = 5 ;
-        camera.position.z = 0;
-        camera.lookAt(scene.position);
+        camera = cameras[3]
         break; 
     case 52: //4
         scene.traverse(function (node) {
@@ -199,7 +199,11 @@ function init() {
 
     createScene();
 
-    createCamera();
+    cameras.push(createCamera());
+    cameras.push(createOrthographicCamera(0, 0, 50));
+    cameras.push(createOrthographicCamera(0, 50, 0));
+    cameras.push(createOrthographicCamera(50, 0, 0));
+    camera = cameras[0];
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", onResize);
