@@ -14,7 +14,7 @@ var delta = 0;
 var cameras = [];
 var objs = [];
 
-function createBall(x, y, z) {
+function createSphere(x, y, z) {
     'use strict';
 
     ball = new THREE.Object3D();
@@ -65,39 +65,60 @@ function createPanel(x, y, z, angle_x, angle_y, angle_z) {
     
 }
 
-function createLathe(x, y, z, angle_x, angle_y, angle_z){
+function createTorus(x, y, z, angle_x, angle_y, angle_z){
 
-    lathe = new THREE.Object3D();
+    torus = new THREE.Object3D();
 
-    const points = [];
-    for (let i = 0; i < 10; i ++) {
-        points.push( new THREE.Vector2(Math.sin(i * 0.2) * 10 + 5, (i - 5) * 2));
-    }
-    geometry = new THREE.LatheGeometry(points);
-    material = new THREE.MeshPhongMaterial({ color: 0xffff00 });
-    lathe = new THREE.Mesh(geometry, material);
-    scene.add(lathe);
-}
-
-function createLine(x, y, z, angle_x, angle_y, angle_z) {
-
-    box = new THREE.Object3D();
-
-    material = new THREE.MeshPhongMaterial({ color: 0x437f5b, wireframe: true });
-    geometry = new THREE.BoxGeometry(1, 20, 25, 30, 20);
+    geometry = new THREE.TorusGeometry(5, 2, 16, 20);
+    material = new THREE.MeshPhongMaterial({ color: 0x957DAD, wireframe: true });
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = angle_x;
     mesh.rotation.y = angle_y;
     mesh.rotation.z = angle_z;
 
     mesh.position.set(x, y, z);
-    box.add(mesh);
+    torus.add(mesh);
+    
+    scene.add(torus);
+}
 
-    scene.add(box);
+function createLine1(x, y, z, angle_x, angle_y, angle_z) {
+
+    line = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0x808080, wireframe: true });
+    geometry = new THREE.CylinderGeometry(0.3, 0.3, 40, 5);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    line.add(mesh);
+
+    scene.add(line);
     
 }
 
-function createCylinder(x, y, z, angle_x, angle_y, angle_z) {
+function createLine2(x, y, z, angle_x, angle_y, angle_z) {
+
+    line = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0x808080, wireframe: true });
+    geometry = new THREE.CylinderGeometry(0.3, 0.3, 40, 5);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    line.add(mesh);
+
+    scene.add(line);
+    
+}
+
+function createCylinder1(x, y, z, angle_x, angle_y, angle_z) {
 
     cylinder = new THREE.Object3D();
 
@@ -112,6 +133,42 @@ function createCylinder(x, y, z, angle_x, angle_y, angle_z) {
     cylinder.add(mesh);
 
     scene.add(cylinder);
+    
+}
+
+function createCylinder2(x, y, z, angle_x, angle_y, angle_z) {
+
+    cylinder = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0x8557CB, wireframe: true });
+    geometry = new THREE.CylinderGeometry(2, 4, 40, 18);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    cylinder.add(mesh);
+
+    scene.add(cylinder);
+    
+}
+
+function createCone(x, y, z, angle_x, angle_y, angle_z) {
+
+    cone = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0x4169CE, wireframe: true });
+    geometry = new THREE.ConeGeometry(5, 17, 20);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    cone.add(mesh);
+
+    scene.add(cone);
     
 }
 
@@ -246,12 +303,17 @@ function onResize() {
 
 function createObjects() {
 
-    createBall(0, 20, 0);
+    createSphere(1, 20, 1);
     createBox(0, 10, 0, degreesToRadians(45), degreesToRadians(45), degreesToRadians(45));
     createPanel(5, 20, -10, degreesToRadians(-45), degreesToRadians(-45), degreesToRadians(-45));
-    createCylinder(0, 0, 15, degreesToRadians(90), 0, 0);
-    createIcosahedron(10, -5, 14);
+    createCylinder1(0, 0, 15, degreesToRadians(90), 0, 0);
+    createIcosahedron(10, -5, 20);
     createExtrude(20, 5, -20, degreesToRadians(60), degreesToRadians(-30), 0)
+    createTorus(-15, 15, 5, 0, 0, 0);
+    createCylinder2(-15, 15, 5, degreesToRadians(90), 0, 0);
+    createLine1(0, 10, 20, degreesToRadians(10), degreesToRadians(55), degreesToRadians(45));
+    createLine2(10, 5, -12, degreesToRadians(90), degreesToRadians(45), degreesToRadians(45));
+    createCone(14, 0, 8, 0, 0, degreesToRadians(30));
 
 }
 
