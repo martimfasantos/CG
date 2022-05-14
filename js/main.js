@@ -14,13 +14,28 @@ var delta = 0;
 var cameras = [];
 var objs = [];
 
-function createSphere(x, y, z) {
+function createSphere1(x, y, z) {
     'use strict';
 
     ball = new THREE.Object3D();
 
     material = new THREE.MeshPhongMaterial({ color: 0x40E0D0, wireframe: true });
     geometry = new THREE.SphereGeometry(4, 10, 10);
+    mesh = new THREE.Mesh(geometry, material);
+
+    ball.position.set(x, y, z);
+    ball.add(mesh);
+
+    scene.add(ball);
+}
+
+function createSphere2(x, y, z) {
+    'use strict';
+
+    ball = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0xB98D64, wireframe: true });
+    geometry = new THREE.SphereGeometry(3, 10, 10, 0, Math.PI);
     mesh = new THREE.Mesh(geometry, material);
 
     ball.position.set(x, y, z);
@@ -47,7 +62,7 @@ function createBox(x, y, z, angle_x, angle_y, angle_z) {
     
 }
 
-function createPanel(x, y, z, angle_x, angle_y, angle_z) {
+function createPanel1(x, y, z, angle_x, angle_y, angle_z) {
 
     box = new THREE.Object3D();
 
@@ -65,12 +80,47 @@ function createPanel(x, y, z, angle_x, angle_y, angle_z) {
     
 }
 
-function createTorus(x, y, z, angle_x, angle_y, angle_z){
+function createPanel2(x, y, z, angle_x, angle_y, angle_z) {
+
+    box = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0x815438, wireframe: true });
+    geometry = new THREE.BoxGeometry(12, 1, 12, 10, 10);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    box.add(mesh);
+
+    scene.add(box);
+    
+}
+
+function createTorus1(x, y, z, angle_x, angle_y, angle_z){
 
     torus = new THREE.Object3D();
 
     geometry = new THREE.TorusGeometry(5, 2, 16, 20);
     material = new THREE.MeshPhongMaterial({ color: 0x957DAD, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    torus.add(mesh);
+    
+    scene.add(torus);
+}
+
+function createTorus2(x, y, z, angle_x, angle_y, angle_z){
+
+    torus = new THREE.Object3D();
+
+    geometry = new THREE.TorusGeometry(1.2, 0.4, 5, 10);
+    material = new THREE.MeshPhongMaterial({ color: 0xAD3141, wireframe: true });
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = angle_x;
     mesh.rotation.y = angle_y;
@@ -172,6 +222,24 @@ function createCone(x, y, z, angle_x, angle_y, angle_z) {
     
 }
 
+function createPyramid(x, y, z, angle_x, angle_y, angle_z) {
+
+    cone = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0x6168C3, wireframe: true });
+    geometry = new THREE.ConeGeometry(5, 14, 3, 4);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    cone.add(mesh);
+
+    scene.add(cone);
+    
+}
+
 function createIcosahedron(x, y, z) {
 
     icosahedron = new THREE.Object3D();
@@ -232,17 +300,7 @@ function degreesToRadians(degrees){
 
 
 function createArticulatedObject(x, y, z){
-    // var geometry1 = new THREE.Object3D();
-    
-    // createBox(geometry1, 0, 0, 0);
-    // createCylinder(geometry1, 0, 0, 15, 0);
-    // createIcosahedron(geometry1, 0, 0, 28);
-    
-    // scene.add(geometry1);
-    
-    // geometry1.position.x = x;
-    // geometry1.position.y = y;
-    // geometry1.position.z = z;
+    createPanel2(x, y, z, 0, 0, 0);
 }
 
 function createCamera() {
@@ -303,18 +361,22 @@ function onResize() {
 
 function createObjects() {
 
-    createSphere(1, 20, 1);
+    createSphere1(1, 20, 1);
     createBox(0, 10, 0, degreesToRadians(45), degreesToRadians(45), degreesToRadians(45));
-    createPanel(5, 20, -10, degreesToRadians(-45), degreesToRadians(-45), degreesToRadians(-45));
+    createPanel1(5, 20, -10, degreesToRadians(-45), degreesToRadians(-45), degreesToRadians(-45));
     createCylinder1(0, 0, 15, degreesToRadians(90), 0, 0);
-    createIcosahedron(10, -5, 20);
-    createExtrude(20, 5, -20, degreesToRadians(60), degreesToRadians(-30), 0)
-    createTorus(-15, 15, 5, 0, 0, 0);
+    createSphere2(0, 0, 25);
+    createIcosahedron(-13, 2.5, 8);
+    createExtrude(20, 7, -20, degreesToRadians(60), degreesToRadians(-30), 0)
+    createTorus1(-15, 15, 5, 0, 0, 0);
     createCylinder2(-15, 15, 5, degreesToRadians(90), 0, 0);
-    createLine1(0, 10, 20, degreesToRadians(10), degreesToRadians(55), degreesToRadians(45));
+    createLine1(0, 10, 18, degreesToRadians(10), degreesToRadians(60), degreesToRadians(45));
     createLine2(10, 5, -12, degreesToRadians(90), degreesToRadians(45), degreesToRadians(45));
-    createCone(14, 0, 8, 0, 0, degreesToRadians(30));
-
+    createTorus2(15.5, 10.5, -20, 0, 0, 0);
+    createCone(12, -5, 0, 0, 0, degreesToRadians(30));
+    createPyramid(-15, -2, 20, degreesToRadians(-30), degreesToRadians(30), degreesToRadians(-45))
+    
+    createArticulatedObject(10, -5, 13);
 }
 
 function createScene() {
