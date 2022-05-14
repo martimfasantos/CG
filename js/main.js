@@ -11,6 +11,7 @@ var geometry, material, mesh;
 var ball;
 var clock = new THREE.Clock();
 var delta = 0;
+var speed = 1;
 var cameras = [];
 var objs = [];
 var keyMap = [];
@@ -439,6 +440,18 @@ function onKeyDown(e) {
         case 40:
             camera.position.z -= 5;
             break;
+        case 107:
+            if (speed < 2) {
+                speed += 0.05; 
+                console.log(speed);
+            }
+            break;
+        case 109:
+            if (speed > 0.05) {
+                speed -= 0.05;
+                console.log(speed);
+            }
+            break;
         default:
             rotate();
             break;
@@ -454,22 +467,22 @@ function onKeyUp(e) {
 function rotate() {
 
     if (keyMap[81] == true || keyMap[113] == true) {
-        scene.rotation.x += 0.05;
+        scene.rotation.x += 0.05 * speed;
     }
     if (keyMap[87] == true || keyMap[119] == true) {
-        scene.rotation.x -= 0.05;
+        scene.rotation.x -= 0.05 * speed;
     }
     if (keyMap[65] == true || keyMap[97] == true) {
-        scene.rotation.y += 0.05;
+        scene.rotation.y += 0.05 * speed;
     }
     if (keyMap[83] == true || keyMap[115] == true) {
-        scene.rotation.y -= 0.05;
+        scene.rotation.y -= 0.05 * speed;
     }
     if (keyMap[90] == true || keyMap[122] == true) {
-        scene.rotation.z += 0.05;
+        scene.rotation.z += 0.05 * speed;
     }
     if (keyMap[88] == true || keyMap[120] == true) {
-        scene.rotation.z -= 0.05;
+        scene.rotation.z -= 0.05 * speed;
     }
 }
 
@@ -523,7 +536,7 @@ function animate() {
     
     delta = clock.getDelta();
     if (ball.userData.jumping) {
-        ball.userData.step += 3 * delta;
+        ball.userData.step += 3 * delta * speed;
         ball.position.y = Math.abs(30 * (Math.sin(ball.userData.step)));
         ball.position.z = 15 * (Math.cos(ball.userData.step));
     }
