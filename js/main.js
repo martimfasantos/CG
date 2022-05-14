@@ -13,6 +13,7 @@ var clock = new THREE.Clock();
 var delta = 0;
 var cameras = [];
 var objs = [];
+var keyMap = [];
 
 function createSphere1(x, y, z) {
     'use strict';
@@ -396,6 +397,8 @@ function createScene() {
 function onKeyDown(e) {
     'use strict';
 
+    keyMap[e.keyCode] = true;
+
     switch (e.keyCode) {
         case 48: //0
             camera = cameras[0]
@@ -436,6 +439,37 @@ function onKeyDown(e) {
         case 40:
             camera.position.z -= 5;
             break;
+        default:
+            rotate();
+            break;
+    }
+}
+
+function onKeyUp(e) {
+    'use strict';
+
+    keyMap[e.keyCode] = false;
+}
+
+function rotate() {
+
+    if (keyMap[81] == true || keyMap[113] == true) {
+        scene.rotation.x += 0.05;
+    }
+    if (keyMap[87] == true || keyMap[119] == true) {
+        scene.rotation.x -= 0.05;
+    }
+    if (keyMap[65] == true || keyMap[97] == true) {
+        scene.rotation.y += 0.05;
+    }
+    if (keyMap[83] == true || keyMap[115] == true) {
+        scene.rotation.y -= 0.05;
+    }
+    if (keyMap[90] == true || keyMap[122] == true) {
+        scene.rotation.z += 0.05;
+    }
+    if (keyMap[88] == true || keyMap[120] == true) {
+        scene.rotation.z -= 0.05;
     }
 }
 
@@ -480,6 +514,7 @@ function init() {
     // events
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", onResize);
+    window.addEventListener("keyup", onKeyUp);
 
 }
 
