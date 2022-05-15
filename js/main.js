@@ -320,7 +320,7 @@ function createLathe(x, y, z, angle_x, angle_y, angle_z) {
 
     const points = [];
     for ( let i = 0; i < 7; i ++ ) {
-        points.push( new THREE.Vector2( Math.sin( i * 0.2 ) * 10 + 1, ( i - 5 ) * 2 ) );
+        points.push( new THREE.Vector2( Math.sin( i * 0.05 ) * 10 + 1, ( i - 5 ) * 1 ) );
     }
     geometry = new THREE.LatheGeometry( points );
     material = new THREE.MeshPhongMaterial( { color: 0xffff00 , wireframe : true } );
@@ -338,8 +338,8 @@ function createLathe(x, y, z, angle_x, angle_y, angle_z) {
 
 function createTube(x, y, z){
     const curve = new THREE.CatmullRomCurve3( [
-        new THREE.Vector3( 3, 7, 10 ),
-        new THREE.Vector3( 0, 10, 0 ),
+        new THREE.Vector3( 2.3, 13.5, 7.2 ),
+        new THREE.Vector3( 0, 15, 0 ),
         new THREE.Vector3( 0, 0.5, 0 )]);
     const geometry = new THREE.TubeGeometry( curve, 20, 1, 8, false );
     const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 , wireframe: true } );
@@ -356,7 +356,7 @@ function degreesToRadians(degrees){
 function createArticulatedObject(x, y, z, angle_x, angle_y, angle_z){
     createCylinder3(x, y, z, 0, 0, 0);
     createTube(x, y, z);
-    createLathe( x + 3, y + 4 , z + 20, angle_x, angle_y, angle_z);
+    createLathe( x + 3, y + 11 , z + 11, angle_x, angle_y, angle_z);
     
 }
 
@@ -434,7 +434,7 @@ function createObjects() {
     createCone(12, -5, 0, 0, 0, degreesToRadians(30));
     createPyramid(-15, -2, 20, degreesToRadians(-30), degreesToRadians(30), degreesToRadians(-45))
 
-    createArticulatedObject(10, -10, 13, degreesToRadians(130), degreesToRadians(35), degreesToRadians(-5));
+    createArticulatedObject(10, -10, 13, degreesToRadians(130), degreesToRadians(35), degreesToRadians(-13));
 }
 
 function createScene() {
