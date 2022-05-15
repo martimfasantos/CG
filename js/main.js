@@ -206,6 +206,24 @@ function createCylinder2(x, y, z, angle_x, angle_y, angle_z) {
     
 }
 
+function createCylinder3(x, y, z, angle_x, angle_y, angle_z) {
+
+    cylinder = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0x8557CB, wireframe: true });
+    geometry = new THREE.CylinderGeometry(3.5, 4, 1, 18);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    cylinder.add(mesh);
+
+    scene.add(cylinder);
+    
+}
+
 function createCone(x, y, z, angle_x, angle_y, angle_z) {
 
     cone = new THREE.Object3D();
@@ -291,18 +309,55 @@ function createExtrude(x, y, z, angle_x, angle_y, angle_z) {
     
     mesh.position.set(x, y, z);
     extrude.add(mesh);
-
+    
     scene.add(extrude);
     
+}
+
+function createLathe(x, y, z, angle_x, angle_y, angle_z) {
+    
+    lathe = new THREE.Object3D();
+
+    const points = [];
+    for ( let i = 0; i < 7; i ++ ) {
+        points.push( new THREE.Vector2( Math.sin( i * 0.2 ) * 10 + 1, ( i - 5 ) * 2 ) );
+    }
+    geometry = new THREE.LatheGeometry( points );
+    material = new THREE.MeshPhongMaterial( { color: 0xffff00 , wireframe : true } );
+    mesh = new THREE.Mesh( geometry, material );
+    
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+    
+    mesh.position.set(x, y, z);
+    lathe.add(mesh);
+
+    scene.add(mesh);
+}
+
+function createTube(x, y, z){
+    const curve = new THREE.CatmullRomCurve3( [
+        new THREE.Vector3( 3, 7, 10 ),
+        new THREE.Vector3( 0, 10, 0 ),
+        new THREE.Vector3( 0, 0.5, 0 )]);
+    const geometry = new THREE.TubeGeometry( curve, 20, 1, 8, false );
+    const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 , wireframe: true } );
+    const mesh = new THREE.Mesh( geometry, material );
+
+    mesh.position.set(x, y, z);    
+    scene.add( mesh );
 }
 
 function degreesToRadians(degrees){
   return degrees * (Math.PI/180);
 }
 
-
-function createArticulatedObject(x, y, z){
-    createPanel2(x, y, z, 0, 0, 0);
+function createArticulatedObject(x, y, z, angle_x, angle_y, angle_z){
+    createCylinder3(x, y, z, 0, 0, 0);
+    createTube(x, y, z);
+    createLathe( x + 3, y + 4 , z + 20, angle_x, angle_y, angle_z);
+    
 }
 
 function createCamera() {
@@ -348,6 +403,7 @@ function createOrthographicCamera(x, y, z) {
     return orthographicCamera;
 }
 
+
 function onResize() {
     'use strict';
 
@@ -377,8 +433,8 @@ function createObjects() {
     createTorus2(15.5, 10.5, -20, 0, 0, 0);
     createCone(12, -5, 0, 0, 0, degreesToRadians(30));
     createPyramid(-15, -2, 20, degreesToRadians(-30), degreesToRadians(30), degreesToRadians(-45))
-    
-    createArticulatedObject(10, -5, 13);
+
+    createArticulatedObject(10, -10, 13, degreesToRadians(130), degreesToRadians(35), degreesToRadians(-5));
 }
 
 function createScene() {
