@@ -524,22 +524,22 @@ function onKeyUp(e) {
 
 function rotate() {
 
-    if (keyMap[81] == true || keyMap[113] == true) {
+    if (keyMap[81] == true || keyMap[113] == true) { //Q or q
         scene.rotation.x += 0.05 * speed;
     }
-    if (keyMap[87] == true || keyMap[119] == true) {
+    if (keyMap[87] == true || keyMap[119] == true) { //W or w
         scene.rotation.x -= 0.05 * speed;
     }
-    if (keyMap[65] == true || keyMap[97] == true) {
+    if (keyMap[65] == true || keyMap[97] == true) { //A or a
         scene.rotation.y += 0.05 * speed;
     }
-    if (keyMap[83] == true || keyMap[115] == true) {
+    if (keyMap[83] == true || keyMap[115] == true) { //S or s
         scene.rotation.y -= 0.05 * speed;
     }
-    if (keyMap[90] == true || keyMap[122] == true) {
+    if (keyMap[90] == true || keyMap[122] == true) { //Z or z
         scene.rotation.z += 0.05 * speed;
     }
-    if (keyMap[88] == true || keyMap[120] == true) {
+    if (keyMap[88] == true || keyMap[120] == true) { //X or x
         scene.rotation.z -= 0.05 * speed;
     }
 }
