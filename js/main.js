@@ -484,25 +484,27 @@ function onKeyDown(e) {
                 }
             });
             break;
-        case 37:
+        case 37: //ArrowLeft
             camera.position.x += 5;
             break;
-        case 38:
+        case 38: //ArrowUp
             camera.position.z += 5;
             break;
-        case 39:
+        case 39: //ArrowRight
             camera.position.x -= 5;
             break;
-        case 40:
+        case 40: //ArrowDown
             camera.position.z -= 5;
             break;
-        case 107:
+        case 171: //+
+        case 107: //Numpad+
             if (speed < 2) {
                 speed += 0.05; 
                 console.log(speed);
             }
             break;
-        case 109:
+        case 173: //-
+        case 109: //Numpad-
             if (speed > 0.05) {
                 speed -= 0.05;
                 console.log(speed);
