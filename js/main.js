@@ -14,6 +14,9 @@ var speed = 1;
 var cameras = [];
 var objs = [];
 var keyMap = [];
+var tube = new THREE.Object3D();
+var cylinder3 = new THREE.Object3D();
+var cylinder5 = new THREE.Object3D();
 
 function createSphere1(x, y, z) {
     'use strict';
@@ -246,8 +249,6 @@ function createCylinder2(x, y, z, angle_x, angle_y, angle_z) {
 
 function createCylinder3(x, y, z, angle_x, angle_y, angle_z) {
 
-    var cylinder = new THREE.Object3D();
-
     material = new THREE.MeshPhongMaterial({ color: 0xA89F7B, wireframe: true });
     geometry = new THREE.CylinderGeometry(3.5, 4, 1, 18);
     mesh = new THREE.Mesh(geometry, material);
@@ -256,10 +257,10 @@ function createCylinder3(x, y, z, angle_x, angle_y, angle_z) {
     mesh.rotation.z = angle_z;
 
     mesh.position.set(x, y, z);
-    cylinder.add(mesh);
+    cylinder3.add(mesh);
 
-    objs.push(cylinder);
-    scene.add(cylinder);
+    objs.push(cylinder3);
+    scene.add(cylinder3);
     
 }
 
@@ -284,8 +285,6 @@ function createCylinder4(x, y, z, angle_x, angle_y, angle_z) {
 
 function createCylinder5(x, y, z, angle_x, angle_y, angle_z) {
 
-    var cylinder = new THREE.Object3D();
-
     material = new THREE.MeshPhongMaterial({ color: 0xF5F5F5, wireframe: true, side: THREE.DoubleSide });
     geometry = new THREE.CylinderGeometry(4.5, 1, 6, 20, 20, openEnded = true);
     mesh = new THREE.Mesh(geometry, material);
@@ -294,10 +293,10 @@ function createCylinder5(x, y, z, angle_x, angle_y, angle_z) {
     mesh.rotation.z = angle_z;
 
     mesh.position.set(x, y, z);
-    cylinder.add(mesh);
+    cylinder5.add(mesh);
 
-    objs.push(cylinder);
-    scene.add(cylinder);
+    objs.push(cylinder5);
+    scene.add(cylinder5);
     
 }
 
@@ -382,8 +381,6 @@ function createExtrude(x, y, z, angle_x, angle_y, angle_z) {
 }
 
 function createTube(x, y, z){
-
-    tube = new THREE.Object3D();
 
     const curve = new THREE.CatmullRomCurve3( [
         new THREE.Vector3( 0, 18, 4.5 ),
@@ -610,13 +607,13 @@ function onKeyDown(e) {
             camera.position.x += 5;
             break;
         case 38: //ArrowUp
-            camera.position.z += 5;
+            camera.position.y += 5;
             break;
         case 39: //ArrowRight
             camera.position.x -= 5;
             break;
         case 40: //ArrowDown
-            camera.position.z -= 5;
+            camera.position.y -= 5;
             break;
         case 171: //+
         case 107: //Numpad+
@@ -647,22 +644,28 @@ function onKeyUp(e) {
 function rotate() {
 
     if (keyMap[81] == true || keyMap[113] == true) { //Q or q
-        scene.rotation.x += 0.05 * speed;
+        cylinder3.rotation.y += 0.05 * speed;
+        cylinder5.rotation.y += 0.05 * speed;
+        tube.rotation.y += 0.05 * speed;
     }
     if (keyMap[87] == true || keyMap[119] == true) { //W or w
-        scene.rotation.x -= 0.05 * speed;
+        cylinder3.rotation.y -= 0.05 * speed;
+        cylinder5.rotation.y -= 0.05 * speed;
+        tube.rotation.y -= 0.05 * speed;
     }
     if (keyMap[65] == true || keyMap[97] == true) { //A or a
-        scene.rotation.y += 0.05 * speed;
+        cylinder5.rotation.y += 0.05 * speed;
+        tube.rotation.y += 0.05 * speed;
     }
     if (keyMap[83] == true || keyMap[115] == true) { //S or s
-        scene.rotation.y -= 0.05 * speed;
+        cylinder5.rotation.y -= 0.05 * speed;
+        tube.rotation.y -= 0.05 * speed;
     }
     if (keyMap[90] == true || keyMap[122] == true) { //Z or z
-        scene.rotation.z += 0.05 * speed;
+        cylinder3.rotation.y += 0.05 * speed;
     }
     if (keyMap[88] == true || keyMap[120] == true) { //X or x
-        scene.rotation.z -= 0.05 * speed;
+        cylinder3.rotation.y -= 0.05 * speed;
     }
 }
 
