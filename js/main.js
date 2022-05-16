@@ -8,7 +8,6 @@
 
 var camera, scene, renderer;
 var geometry, material, mesh;
-var ball;
 var clock = new THREE.Clock();
 var delta = 0;
 var speed = 1;
@@ -19,38 +18,106 @@ var keyMap = [];
 function createSphere1(x, y, z) {
     'use strict';
 
-    ball = new THREE.Object3D();
+    var sphere = new THREE.Object3D();
 
     material = new THREE.MeshPhongMaterial({ color: 0x40E0D0, wireframe: true });
-    geometry = new THREE.SphereGeometry(4, 10, 10);
+    geometry = new THREE.SphereGeometry(6, 10, 10);
     mesh = new THREE.Mesh(geometry, material);
 
-    ball.position.set(x, y, z);
-    ball.add(mesh);
+    sphere.position.set(x, y, z);
+    sphere.add(mesh);
 
-    scene.add(ball);
+    objs.push(sphere);
+    scene.add(sphere);
 }
 
 function createSphere2(x, y, z) {
     'use strict';
 
-    ball = new THREE.Object3D();
+    var sphere = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0xB98D64, wireframe: true });
+    geometry = new THREE.SphereGeometry(1.2, 5, 5);
+    mesh = new THREE.Mesh(geometry, material);
+
+    sphere.position.set(x, y, z);
+    sphere.add(mesh);
+
+    objs.push(sphere);
+    scene.add(sphere);
+}
+
+function createSphere3(x, y, z) {
+    'use strict';
+
+    var sphere = new THREE.Object3D();
 
     material = new THREE.MeshPhongMaterial({ color: 0xB98D64, wireframe: true });
     geometry = new THREE.SphereGeometry(3, 10, 10, 0, Math.PI);
     mesh = new THREE.Mesh(geometry, material);
 
-    ball.position.set(x, y, z);
-    ball.add(mesh);
+    sphere.position.set(x, y, z);
+    sphere.add(mesh);
 
-    scene.add(ball);
+    objs.push(sphere);
+    scene.add(sphere);
+}
+
+function createSphere4(x, y, z) {
+    'use strict';
+
+    var sphere = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0xB98D64, wireframe: true });
+    geometry = new THREE.SphereGeometry(3, 10, 10, Math.PI, Math.PI);
+    mesh = new THREE.Mesh(geometry, material);
+
+    sphere.position.set(x, y, z);
+    sphere.add(mesh);
+
+    objs.push(sphere);
+    scene.add(sphere);
+}
+
+function createSphere5(x, y, z) {
+    'use strict';
+
+    var sphere = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0xE77DA3, wireframe: true });
+    geometry = new THREE.SphereGeometry(4, 20, 16, 0, 2*Math.PI, -Math.PI/2);
+    mesh = new THREE.Mesh(geometry, material);
+
+    sphere.position.set(x, y, z);
+    sphere.add(mesh);
+
+    objs.push(sphere);
+    scene.add(sphere);
+}
+
+function createSphere6(x, y, z) {
+    'use strict';
+
+    var sphere = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0xFAF6E3, wireframe: true });
+    geometry = new THREE.SphereGeometry(4, 10, 16, 0, 2*Math.PI, 0, Math.PI-0.7);
+    mesh = new THREE.Mesh(geometry, material);
+
+    sphere.position.set(x, y, z);
+    sphere.add(mesh);
+
+    objs.push(sphere);
+    scene.add(sphere);
 }
 
 function createBox(x, y, z, angle_x, angle_y, angle_z) {
 
-    box = new THREE.Object3D();
+    var box = new THREE.Object3D();
+    
+    // const texture = new THREE.TextureLoader().load('textures/rubiks_cube.jpg');
 
-    material = new THREE.MeshPhongMaterial({ color: 0xff6600, wireframe: true });
+    material = new THREE.MeshPhongMaterial({ color: 0xff6600, wireframe: true /*, map: texture */ });
     geometry = new THREE.BoxGeometry(8, 8, 8, 2, 2);
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = angle_x;
@@ -60,13 +127,14 @@ function createBox(x, y, z, angle_x, angle_y, angle_z) {
     mesh.position.set(x, y, z);
     box.add(mesh);
 
+    objs.push(box);
     scene.add(box);
     
 }
 
 function createPanel1(x, y, z, angle_x, angle_y, angle_z) {
 
-    box = new THREE.Object3D();
+    var box = new THREE.Object3D();
 
     material = new THREE.MeshPhongMaterial({ color: 0x437f5b, wireframe: true });
     geometry = new THREE.BoxGeometry(1, 20, 25, 30, 20);
@@ -78,13 +146,14 @@ function createPanel1(x, y, z, angle_x, angle_y, angle_z) {
     mesh.position.set(x, y, z);
     box.add(mesh);
 
+    objs.push(box);
     scene.add(box);
     
 }
 
 function createPanel2(x, y, z, angle_x, angle_y, angle_z) {
 
-    box = new THREE.Object3D();
+    var panel = new THREE.Object3D();
 
     material = new THREE.MeshPhongMaterial({ color: 0x815438, wireframe: true });
     geometry = new THREE.BoxGeometry(12, 1, 12, 10, 10);
@@ -94,15 +163,16 @@ function createPanel2(x, y, z, angle_x, angle_y, angle_z) {
     mesh.rotation.z = angle_z;
 
     mesh.position.set(x, y, z);
-    box.add(mesh);
+    panel.add(mesh);
 
-    scene.add(box);
+    objs.push(panel);
+    scene.add(panel);
     
 }
 
 function createTorus1(x, y, z, angle_x, angle_y, angle_z){
 
-    torus = new THREE.Object3D();
+    var torus = new THREE.Object3D();
 
     geometry = new THREE.TorusGeometry(5, 2, 16, 20);
     material = new THREE.MeshPhongMaterial({ color: 0x957DAD, wireframe: true });
@@ -113,15 +183,16 @@ function createTorus1(x, y, z, angle_x, angle_y, angle_z){
 
     mesh.position.set(x, y, z);
     torus.add(mesh);
-    
+
+    objs.push(torus);
     scene.add(torus);
 }
 
 function createTorus2(x, y, z, angle_x, angle_y, angle_z){
 
-    torus = new THREE.Object3D();
+    var torus = new THREE.Object3D();
 
-    geometry = new THREE.TorusGeometry(1.2, 0.4, 5, 10);
+    geometry = new THREE.TorusGeometry(8, 0.8, 3, 20);
     material = new THREE.MeshPhongMaterial({ color: 0xAD3141, wireframe: true });
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = angle_x;
@@ -131,51 +202,16 @@ function createTorus2(x, y, z, angle_x, angle_y, angle_z){
     mesh.position.set(x, y, z);
     torus.add(mesh);
     
+    objs.push(torus);
     scene.add(torus);
-}
-
-function createLine1(x, y, z, angle_x, angle_y, angle_z) {
-
-    line = new THREE.Object3D();
-
-    material = new THREE.MeshPhongMaterial({ color: 0x808080, wireframe: true });
-    geometry = new THREE.CylinderGeometry(0.3, 0.3, 40, 5);
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.rotation.x = angle_x;
-    mesh.rotation.y = angle_y;
-    mesh.rotation.z = angle_z;
-
-    mesh.position.set(x, y, z);
-    line.add(mesh);
-
-    scene.add(line);
-    
-}
-
-function createLine2(x, y, z, angle_x, angle_y, angle_z) {
-
-    line = new THREE.Object3D();
-
-    material = new THREE.MeshPhongMaterial({ color: 0x808080, wireframe: true });
-    geometry = new THREE.CylinderGeometry(0.3, 0.3, 40, 5);
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.rotation.x = angle_x;
-    mesh.rotation.y = angle_y;
-    mesh.rotation.z = angle_z;
-
-    mesh.position.set(x, y, z);
-    line.add(mesh);
-
-    scene.add(line);
-    
 }
 
 function createCylinder1(x, y, z, angle_x, angle_y, angle_z) {
 
-    cylinder = new THREE.Object3D();
+    var cylinder = new THREE.Object3D();
 
     material = new THREE.MeshPhongMaterial({ color: 0xB87333, wireframe: true });
-    geometry = new THREE.CylinderGeometry(5, 5, 20, 35);
+    geometry = new THREE.CylinderGeometry(5, 5, 16, 35);
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = angle_x;
     mesh.rotation.y = angle_y;
@@ -184,13 +220,14 @@ function createCylinder1(x, y, z, angle_x, angle_y, angle_z) {
     mesh.position.set(x, y, z);
     cylinder.add(mesh);
 
+    objs.push(cylinder);
     scene.add(cylinder);
     
 }
 
 function createCylinder2(x, y, z, angle_x, angle_y, angle_z) {
 
-    cylinder = new THREE.Object3D();
+    var cylinder = new THREE.Object3D();
 
     material = new THREE.MeshPhongMaterial({ color: 0x8557CB, wireframe: true });
     geometry = new THREE.CylinderGeometry(2, 4, 40, 18);
@@ -202,15 +239,16 @@ function createCylinder2(x, y, z, angle_x, angle_y, angle_z) {
     mesh.position.set(x, y, z);
     cylinder.add(mesh);
 
+    objs.push(cylinder);
     scene.add(cylinder);
     
 }
 
 function createCylinder3(x, y, z, angle_x, angle_y, angle_z) {
 
-    cylinder = new THREE.Object3D();
+    var cylinder = new THREE.Object3D();
 
-    material = new THREE.MeshPhongMaterial({ color: 0x8557CB, wireframe: true });
+    material = new THREE.MeshPhongMaterial({ color: 0xA89F7B, wireframe: true });
     geometry = new THREE.CylinderGeometry(3.5, 4, 1, 18);
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = angle_x;
@@ -220,16 +258,57 @@ function createCylinder3(x, y, z, angle_x, angle_y, angle_z) {
     mesh.position.set(x, y, z);
     cylinder.add(mesh);
 
+    objs.push(cylinder);
+    scene.add(cylinder);
+    
+}
+
+function createCylinder4(x, y, z, angle_x, angle_y, angle_z) {
+
+    var cylinder = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0x754C24, wireframe: true });
+    geometry = new THREE.CylinderGeometry(1.3, 1.2, 20, 10);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    cylinder.add(mesh);
+
+    objs.push(cylinder);
+    scene.add(cylinder);
+    
+}
+
+function createCylinder5(x, y, z, angle_x, angle_y, angle_z) {
+
+    var cylinder = new THREE.Object3D();
+
+    material = new THREE.MeshPhongMaterial({ color: 0xF5F5F5, wireframe: true, side: THREE.DoubleSide });
+    geometry = new THREE.CylinderGeometry(4.5, 1, 6, 20, 20, openEnded = true);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = angle_x;
+    mesh.rotation.y = angle_y;
+    mesh.rotation.z = angle_z;
+
+    mesh.position.set(x, y, z);
+    cylinder.add(mesh);
+
+    objs.push(cylinder);
     scene.add(cylinder);
     
 }
 
 function createCone(x, y, z, angle_x, angle_y, angle_z) {
 
-    cone = new THREE.Object3D();
+    var cone = new THREE.Object3D();
 
-    material = new THREE.MeshPhongMaterial({ color: 0x4169CE, wireframe: true });
-    geometry = new THREE.ConeGeometry(5, 17, 20);
+    // const texture = new THREE.TextureLoader().load('textures/ice_cream_cone.jpg')
+
+    material = new THREE.MeshPhongMaterial({ color: 0xCDA26F, wireframe: true /*, map: texture*/ });
+    geometry = new THREE.ConeGeometry(4, 18, 20);
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = angle_x;
     mesh.rotation.y = angle_y;
@@ -238,39 +317,26 @@ function createCone(x, y, z, angle_x, angle_y, angle_z) {
     mesh.position.set(x, y, z);
     cone.add(mesh);
 
+    objs.push(cone);
     scene.add(cone);
     
 }
 
-function createPyramid(x, y, z, angle_x, angle_y, angle_z) {
+function createIcosahedron(x, y, z, angle_x, angle_y, angle_z) {
 
-    cone = new THREE.Object3D();
+    var icosahedron = new THREE.Object3D();
 
-    material = new THREE.MeshPhongMaterial({ color: 0x6168C3, wireframe: true });
-    geometry = new THREE.ConeGeometry(5, 14, 3, 4);
+    material = new THREE.MeshPhongMaterial({ color: 0x60646B, wireframe: true });
+    geometry = new THREE.IcosahedronGeometry(2.2, 1);
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = angle_x;
     mesh.rotation.y = angle_y;
     mesh.rotation.z = angle_z;
-
-    mesh.position.set(x, y, z);
-    cone.add(mesh);
-
-    scene.add(cone);
-    
-}
-
-function createIcosahedron(x, y, z) {
-
-    icosahedron = new THREE.Object3D();
-
-    material = new THREE.MeshPhongMaterial({ color: 0xB1023D, wireframe: true });
-    geometry = new THREE.IcosahedronGeometry(5, 0);
-    mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
     icosahedron.add(mesh);
 
+    objs.push(icosahedron);
     scene.add(icosahedron);
     
 }
@@ -289,18 +355,18 @@ function createExtrude(x, y, z, angle_x, angle_y, angle_z) {
     shape.lineTo(0, 0);
 
     const extrudeSettings = {
-        amount: 20,
+        amount: 15,
         steps: 5,
         depth: 4,
         bevelEnabled: true,
-        bevelThickness: 2,
+        bevelThickness: 2.5,
         bevelSize: 2,
         bevelOffset: 4,
         bevelSegments: 2
 
     };
 
-    material = new THREE.MeshPhongMaterial({ color: 0xB123E2, wireframe: true });
+    material = new THREE.MeshPhongMaterial({ color: 0x43464B, wireframe: true });
     geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = angle_x;
@@ -309,55 +375,96 @@ function createExtrude(x, y, z, angle_x, angle_y, angle_z) {
     
     mesh.position.set(x, y, z);
     extrude.add(mesh);
-    
+
+    objs.push(extrude);
     scene.add(extrude);
     
 }
 
-function createLathe(x, y, z, angle_x, angle_y, angle_z) {
-    
-    lathe = new THREE.Object3D();
-
-    const points = [];
-    for ( let i = 0; i < 7; i ++ ) {
-        points.push( new THREE.Vector2( Math.sin( i * 0.05 ) * 10 + 1, ( i - 5 ) * 1 ) );
-    }
-    geometry = new THREE.LatheGeometry( points );
-    material = new THREE.MeshPhongMaterial( { color: 0xffff00 , wireframe : true } );
-    mesh = new THREE.Mesh( geometry, material );
-    
-    mesh.rotation.x = angle_x;
-    mesh.rotation.y = angle_y;
-    mesh.rotation.z = angle_z;
-    
-    mesh.position.set(x, y, z);
-    lathe.add(mesh);
-
-    scene.add(mesh);
-}
-
 function createTube(x, y, z){
-    const curve = new THREE.CatmullRomCurve3( [
-        new THREE.Vector3( 2.3, 13.5, 7.2 ),
-        new THREE.Vector3( 0, 15, 0 ),
-        new THREE.Vector3( 0, 0.5, 0 )]);
-    const geometry = new THREE.TubeGeometry( curve, 20, 1, 8, false );
-    const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 , wireframe: true } );
-    const mesh = new THREE.Mesh( geometry, material );
 
-    mesh.position.set(x, y, z);    
-    scene.add( mesh );
+    tube = new THREE.Object3D();
+
+    const curve = new THREE.CatmullRomCurve3( [
+        new THREE.Vector3( 0, 18, 4.5 ),
+        new THREE.Vector3( 0, 20, 0 ),
+        new THREE.Vector3( 0, 0.5, 0 )]);
+    geometry = new THREE.TubeGeometry(curve, 20, 1, 8, closed = false );
+    material = new THREE.MeshPhongMaterial({ color: 0xA8A8A8, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.set(x, y, z);  
+    tube.add(mesh);
+
+    scene.add(tube);
 }
 
 function degreesToRadians(degrees){
   return degrees * (Math.PI/180);
 }
 
+
 function createArticulatedObject(x, y, z, angle_x, angle_y, angle_z){
-    createCylinder3(x, y, z, 0, 0, 0);
+    createCylinder3(x, y, z, angle_x, angle_y, angle_z);
     createTube(x, y, z);
-    createLathe( x + 3, y + 11 , z + 11, angle_x, angle_y, angle_z);
+    createCylinder5( x, y + 16.9 , z + 7, angle_x + degreesToRadians(115), angle_y, angle_z);
+
+}
+
+function createCamera() {
+    'use strict';
+    camera = new THREE.PerspectiveCamera( 70,
+                                          window.innerWidth / window.innerHeight,
+                                          1,
+                                          1000 );
+    // Position
+    camera.position.x = 50;
+    camera.position.y = 50;
+    camera.position.z = 50;
+
+    // Point Light
+    const light = new THREE.PointLight(0xffffff, 1);
+    camera.add(light);
+
+    camera.lookAt(scene.position);
+
+    return camera;
+}
+
+function createOrthographicCamera(x, y, z) {
+    'use strict';
+
+    var orthographicCamera = new THREE.OrthographicCamera( window.innerWidth / - 20,
+                                                       window.innerWidth / 20,
+                                                       window.innerHeight / 20, 
+                                                       window.innerHeight / - 20, 
+                                                       1, 
+                                                       1000 );
+    // Position
+    orthographicCamera.position.x = x;
+    orthographicCamera.position.y = y;
+    orthographicCamera.position.z = z;
+
+    // Point Light
+    const light = new THREE.PointLight(0xffffff, 1);
+    camera.add(light);
     
+    orthographicCamera.lookAt(scene.position);
+
+    return orthographicCamera;
+    
+}
+
+function onResize() {
+    'use strict';
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    if (window.innerHeight > 0 && window.innerWidth > 0) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    }
+
 }
 
 function createCamera() {
@@ -419,22 +526,37 @@ function onResize() {
 
 function createObjects() {
 
-    createSphere1(1, 20, 1);
-    createBox(0, 10, 0, degreesToRadians(45), degreesToRadians(45), degreesToRadians(45));
-    createPanel1(5, 20, -10, degreesToRadians(-45), degreesToRadians(-45), degreesToRadians(-45));
-    createCylinder1(0, 0, 15, degreesToRadians(90), 0, 0);
-    createSphere2(0, 0, 25);
-    createIcosahedron(-13, 2.5, 8);
-    createExtrude(20, 7, -20, degreesToRadians(60), degreesToRadians(-30), 0)
-    createTorus1(-15, 15, 5, 0, 0, 0);
-    createCylinder2(-15, 15, 5, degreesToRadians(90), 0, 0);
-    createLine1(0, 10, 18, degreesToRadians(10), degreesToRadians(60), degreesToRadians(45));
-    createLine2(10, 5, -12, degreesToRadians(90), degreesToRadians(45), degreesToRadians(45));
-    createTorus2(15.5, 10.5, -20, 0, 0, 0);
-    createCone(12, -5, 0, 0, 0, degreesToRadians(30));
-    createPyramid(-15, -2, 20, degreesToRadians(-30), degreesToRadians(30), degreesToRadians(-45))
+    // Planet
+    createSphere1(14, 26, 0);
+    createTorus2(14, 26, 0, degreesToRadians(90), degreesToRadians(-15), 0);
+    createSphere2(23, 28, 3);
 
-    createArticulatedObject(10, -10, 13, degreesToRadians(130), degreesToRadians(35), degreesToRadians(-13));
+    // Roller
+    createCylinder1(5, -5, 18, degreesToRadians(90), 0, 0);
+    createSphere3(5, -5, 26);
+    createSphere4(5, -5, 10);
+    
+    // Hammer
+    createExtrude(15, 7, -18, degreesToRadians(80), degreesToRadians(-10), 0)
+    createCylinder4(16.2, 2.5, -2, degreesToRadians(80), degreesToRadians(-10), 0);
+    createIcosahedron(16.2, 4.7, 9.7, degreesToRadians(-20), degreesToRadians(30), 0);
+    
+    // Ice Cream
+    createCone(-11, -3, 17, 0, 0, degreesToRadians(180));
+    createSphere5(-11, 6, 17);
+    createSphere6(-11, 12, 17);
+    
+    // Random mambo
+    createCylinder2(-20, 23, 8, degreesToRadians(70), 0, 0);
+    createTorus1(-20, 23, 8, degreesToRadians(-20), 0, 0);
+    
+    // Random Box
+    createBox(-8, 33, -10, degreesToRadians(45), degreesToRadians(45), degreesToRadians(45));
+
+    // Panel
+    createPanel1(13, 25, -15, degreesToRadians(45), degreesToRadians(90), degreesToRadians(-30));
+
+    createArticulatedObject(0, 0, 0, degreesToRadians(0), degreesToRadians(0), degreesToRadians(0));
 }
 
 function createScene() {
@@ -564,13 +686,13 @@ function init() {
     var spotLight1 = new THREE.SpotLight(0xffffff);
     spotLight1.position.set(0, 30, 60);
     spotLight1.castShadow = true;
-    spotLight1.intensity = 0.8;
+    spotLight1.intensity = 0.5;
     scene.add(spotLight1);
 
     var spotLight2 = new THREE.SpotLight(0xffffff);
-    spotLight2.position.set(10, -25, 0);
+    spotLight2.position.set(30, -60, 0);
     spotLight2.castShadow = true;
-    spotLight2.intensity = 1;
+    spotLight2.intensity = 0.5;
     scene.add(spotLight2);
 
 
@@ -592,12 +714,12 @@ function init() {
 function animate() {
     'use strict';
     
-    delta = clock.getDelta();
-    if (ball.userData.jumping) {
-        ball.userData.step += 3 * delta * speed;
-        ball.position.y = Math.abs(30 * (Math.sin(ball.userData.step)));
-        ball.position.z = 15 * (Math.cos(ball.userData.step));
-    }
+    // delta = clock.getDelta();
+    // if (ball.userData.jumping) {
+    //     ball.userData.step += 3 * delta * speed;
+    //     ball.position.y = Math.abs(30 * (Math.sin(ball.userData.step)));
+    //     ball.position.z = 15 * (Math.cos(ball.userData.step));
+    // }
 
     render();
 
