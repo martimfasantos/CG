@@ -603,18 +603,6 @@ function onKeyDown(e) {
                 }
             });
             break;
-        case 37: //ArrowLeft
-            camera.position.x += 5;
-            break;
-        case 38: //ArrowUp
-            camera.position.y += 5;
-            break;
-        case 39: //ArrowRight
-            camera.position.x -= 5;
-            break;
-        case 40: //ArrowDown
-            camera.position.y -= 5;
-            break;
         case 171: //+
         case 107: //Numpad+
             if (speed < 2) {
@@ -630,7 +618,7 @@ function onKeyDown(e) {
             }
             break;
         default:
-            rotate();
+            movement();
             break;
     }
 }
@@ -641,8 +629,9 @@ function onKeyUp(e) {
     keyMap[e.keyCode] = false;
 }
 
-function rotate() {
+function movement() {
 
+    //rotation
     if (keyMap[81] == true || keyMap[113] == true) { //Q or q
         cylinder3.rotation.y += 0.05 * speed;
         cylinder5.rotation.y += 0.05 * speed;
@@ -667,6 +656,38 @@ function rotate() {
     if (keyMap[88] == true || keyMap[120] == true) { //X or x
         cylinder3.rotation.y -= 0.05 * speed;
     }
+
+    //translation
+    if (keyMap[37] == true) { //ArrowLeft
+        cylinder3.position.x -= 1;
+        cylinder5.position.x -= 1;
+        tube.position.x -= 1;
+    }
+    if (keyMap[38] == true) { //ArrowUp
+        cylinder3.position.y += 1;
+        cylinder5.position.y += 1;
+        tube.position.y += 1;
+    }    
+    if (keyMap[39] == true) { //ArrowRight
+        cylinder3.position.x += 1;
+        cylinder5.position.x += 1;
+        tube.position.x += 1;
+    }
+    if (keyMap[40] == true) { //ArrowDown
+        cylinder3.position.y -= 1;
+        cylinder5.position.y -= 1;
+        tube.position.y -= 1;
+    } 
+    if (keyMap[68] == true || keyMap[100] == true) { //D or d
+        cylinder3.position.z += 1;
+        cylinder5.position.z += 1;
+        tube.position.z += 1;
+    }  
+    if (keyMap[67] == true || keyMap[99] == true) { //C or c
+        cylinder3.position.z -= 1;
+        cylinder5.position.z -= 1;
+        tube.position.z -= 1;
+    }    
 }
 
 function render() {
