@@ -17,6 +17,7 @@ var keyMap = [];
 var tube = new THREE.Object3D();
 var cylinder3 = new THREE.Object3D();
 var cylinder5 = new THREE.Object3D();
+var limitRotation = 0;
 
 function createSphere1(x, y, z) {
     'use strict';
@@ -651,13 +652,15 @@ function movement() {
         tube.rotation.y -= 0.05 * speed;
     }
     if (keyMap[90] == true || keyMap[122] == true) { //Z or z
-        if (cylinder5.rotation.y <= 0.15) {
+        if (limitRotation <= 0.15) {
             cylinder5.rotation.y += 0.05 * speed;
+            limitRotation += 0.05 * speed;
         }
     }
     if (keyMap[88] == true || keyMap[120] == true) { //X or x
-        if (cylinder5.rotation.y >= -0.15) {
+        if (limitRotation >= -0.15) {
             cylinder5.rotation.y -= 0.05 * speed;
+            limitRotation -= 0.05 * speed;
         }
     }
 
