@@ -651,10 +651,14 @@ function movement() {
         tube.rotation.y -= 0.05 * speed;
     }
     if (keyMap[90] == true || keyMap[122] == true) { //Z or z
-        cylinder3.rotation.y += 0.05 * speed;
+        if (cylinder5.rotation.y <= 0.15) {
+            cylinder5.rotation.y += 0.05 * speed;
+        }
     }
     if (keyMap[88] == true || keyMap[120] == true) { //X or x
-        cylinder3.rotation.y -= 0.05 * speed;
+        if (cylinder5.rotation.y >= -0.15) {
+            cylinder5.rotation.y -= 0.05 * speed;
+        }
     }
 
     //translation
