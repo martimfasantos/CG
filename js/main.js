@@ -1,11 +1,5 @@
 /* global THREE */
 
-/* TODO 
-    ERROS A CORRIGIR
-    - render chamado multiplas vezes - evitar chamar tantas vezes o render
-    (desenhar table, perna, perna, perna, perna then render)
-*/
-
 var camera, scene, renderer;
 var clock = new THREE.Clock();
 
@@ -14,8 +8,12 @@ const distance = 1;
 const angle = 0.05;
 var rotationLimit = 0;
 
-var cameras = [];
-var objs = [];
+var defaultCamera, frontCamera, topCamera, lateralCamera;
+const cameraDist = 50;
+const originalAspect = window.innerWidth / window.innerHeight;
+const viewSize = 20;
+
+var primitives = [];
 var keyMap = [];
 
 var lamp = { base : null,
@@ -23,14 +21,13 @@ var lamp = { base : null,
              lampshade : null
             };
 
+
 function createPrimitive(x, y, z, angle_x, angle_y, angle_z, color, geometry, side, texture){
 
     const primitive = new THREE.Object3D();
     
-    // const texture = new THREE.TextureLoader().load('textures/rubiks_cube.jpg');
-
-    const material = new THREE.MeshPhongMaterial({ color: color, wireframe: true, side: side/*, map: texture */ });
-    const _geometry = geometry
+    const material = new THREE.MeshPhongMaterial({ color: color, wireframe: true, side: side, map: texture});
+    const _geometry = geometry;
     const mesh = new THREE.Mesh(_geometry, material);
     mesh.rotation.x = angle_x;
     mesh.rotation.y = angle_y;
@@ -39,7 +36,7 @@ function createPrimitive(x, y, z, angle_x, angle_y, angle_z, color, geometry, si
     mesh.position.set(x, y, z);
     primitive.add(mesh);
 
-    objs.push(primitive);
+    primitives.push(primitive);
     scene.add(primitive);
 
     return primitive;
@@ -54,7 +51,8 @@ function createLamp(x, y, z, angle_x, angle_y, angle_z){
 
     const lampshade = createPrimitive( x, y + 16.9 , z + 7, angle_x + degreesToRadians(115), angle_y, angle_z, 0xF5F5F5,
         new THREE.CylinderGeometry(4.5, 1, 6, 20, 20, openEnded = true), THREE.DoubleSide, null);
-
+    axis = new THREE.Vector3(0, 18, 4.5 ).normalize();
+    
     const curve = new THREE.CatmullRomCurve3( [
         new THREE.Vector3( 0, 18, 4.5 ),
         new THREE.Vector3( 0, 20, 0 ),
@@ -65,7 +63,7 @@ function createLamp(x, y, z, angle_x, angle_y, angle_z){
     neck.add(lampshade);
 
     const base = createPrimitive(x, y, z, angle_x, angle_y, angle_z, 0xA89F7B,
-        new THREE.CylinderGeometry(3.5, 4, 1, 18), THREE.DoubleSide, null);
+        new THREE.CylinderGeometry(3.5, 4.2, 1, 18), THREE.DoubleSide, null);
     base.add(neck);    
 
     // Create object Lamp
@@ -75,16 +73,16 @@ function createLamp(x, y, z, angle_x, angle_y, angle_z){
 
 }
 
-function createCamera() {
+function createCamera(x, y, z) {
     'use strict';
     camera = new THREE.PerspectiveCamera( 70,
                                           window.innerWidth / window.innerHeight,
                                           1,
                                           1000 );
     // Position
-    camera.position.x = 50;
-    camera.position.y = 50;
-    camera.position.z = 50;
+    camera.translateX(x);
+    camera.translateY(y);
+    camera.translateZ(z);
 
     // Point Light
     const light = new THREE.PointLight(0xffffff, 1);
@@ -98,16 +96,16 @@ function createCamera() {
 function createOrthographicCamera(x, y, z) {
     'use strict';
 
-    var orthographicCamera = new THREE.OrthographicCamera( window.innerWidth / - 2,
-                                                       window.innerWidth / 2,
-                                                       window.innerHeight / 2, 
-                                                       window.innerHeight / -2, 
+    var orthographicCamera = new THREE.OrthographicCamera( window.innerWidth / - 20,
+                                                       window.innerWidth / 20,
+                                                       window.innerHeight / 20, 
+                                                       window.innerHeight / -20, 
                                                        1, 
                                                        1000 );
     // Position
-    orthographicCamera.position.x = x;
-    orthographicCamera.position.y = y;
-    orthographicCamera.position.z = z;
+    orthographicCamera.translateX(x);
+    orthographicCamera.translateY(y);
+    orthographicCamera.translateZ(z);
 
     // Point Light
     const light = new THREE.PointLight(0xffffff, 1);
@@ -119,27 +117,30 @@ function createOrthographicCamera(x, y, z) {
     
 }
 
-function onResize() {
+function resizeCamera(camera){
+    'use strict';
+
+    var aspect = window.innerWidth / window.innerHeight;
+    var change = originalAspect / aspect;
+    var newViewSize = viewSize * change;
+    camera.left = -aspect * newViewSize / 2;
+    camera.right = aspect * newViewSize  / 2;
+    camera.top = newViewSize / 2;
+    camera.bottom = -newViewSize / 2;
+            
+    camera.updateProjectionMatrix();
+
+}
+
+function onWindowResize() {
     'use strict';
     
-    if (camera == cameras[0]) {   
-        if (window.innerHeight > 0 && window.innerWidth > 0) {
-            
-            var aspect = window.innerWidth / window.innerHeight;
-            camera.left = -aspect * viewSize / 2;
-            camera.right = aspect * viewSize  / 2;
-            camera.top = viewSize / 2;
-            camera.bottom = -viewSize / 2;
-            
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-    }
+    resizeCamera(defaultCamera);
+    resizeCamera(frontCamera);
+    resizeCamera(topCamera);
+    resizeCamera(lateralCamera);
 
-    else {
-        
-    }
-
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
 
@@ -239,8 +240,8 @@ function createScene() {
     
     scene.add(new THREE.AxisHelper(10));
 
-    const light = new THREE.AmbientLight( 0xFFFFFF ); // soft white light
-    scene.add( light );
+    const light = new THREE.AmbientLight(0xFFFFFF);
+    scene.add(light);
 
     createObjects();
 
@@ -253,16 +254,16 @@ function onKeyDown(e) {
 
     switch (e.keyCode) {
         case 48: //0
-            camera = cameras[0]
+            camera = defaultCamera;
             break;
         case 49: //1
-            camera = cameras[1]
+            camera = frontCamera;
             break;
         case 50: //2
-            camera = cameras[2]
+            camera = topCamera;
             break;
         case 51: //3
-            camera = cameras[3]
+            camera = lateralCamera;
             break; 
         case 52: //4
             scene.traverse(function (node) {
@@ -333,18 +334,15 @@ function init() {
     spotLight2.intensity = 0.5;
     scene.add(spotLight2);
 
-
     // Cameras
-    cameras.push(createCamera());
-    cameras.push(createOrthographicCamera(0, 0, 50));
-    cameras.push(createOrthographicCamera(0, 50, 0));
-    cameras.push(createOrthographicCamera(50, 0, 0));
-    camera = cameras[0];
-
+    defaultCamera = createCamera(cameraDist, cameraDist, cameraDist);
+    frontCamera = createOrthographicCamera(0, 0, cameraDist);
+    topCamera = createOrthographicCamera(0, cameraDist, 0);
+    lateralCamera = createOrthographicCamera(cameraDist, 0, 0);
 
     // Events
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("resize", onResize);
+    window.addEventListener("resize", onWindowResize);
     window.addEventListener("keyup", onKeyUp);
 
 }
@@ -390,14 +388,15 @@ function animate() {
         lamp.neck.rotateY( -rotationStep );
     }
     if (keyMap[90] == true || keyMap[122] == true) { //Z or z
+        // lamp.lampshade.rotateOnAxis( axis, rotationStep );
+        lamp.lampshade.mesh.rotation.y += -rotationStep;
         if (rotationLimit <= 3*rotationStep) {
-            lamp.lampshade.rotateY( rotationStep );
             rotationLimit += rotationStep;
         }
     }
     if (keyMap[88] == true || keyMap[120] == true) { //X or x
+        lamp.lampshade.rotateZ( -rotationStep );
         if (rotationLimit >= -3*rotationStep) {
-            lamp.lampshade.rotateY( -rotationStep );
             rotationLimit -= rotationStep
         }
     }
