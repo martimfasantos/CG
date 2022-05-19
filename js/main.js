@@ -406,26 +406,14 @@ function animate() {
         lamp.neck.rotateY( -rotationStep );
     }
     if (keyMap[90] == true || keyMap[122] == true) { //Z or z
-<<<<<<< HEAD
-        // lamp.lampshade.rotateOnAxis( axis, rotationStep );
-        lamp.lampshade.mesh.rotation.y += -rotationStep;
-        if (rotationLimit <= 3*rotationStep) {
-=======
-
         if (rotationLimit <= 30*rotationStep) {
             rotateAboutPoint(lamp.lampshade, new THREE.Vector3(0, 18.1, 0), new THREE.Vector3(0, 0, 1), rotationStep);
->>>>>>> 9883366512b9c96f3e9e2cc9ab6f643a3f65123c
             rotationLimit += rotationStep;
         }   
     }
     if (keyMap[88] == true || keyMap[120] == true) { //X or x
-<<<<<<< HEAD
-        lamp.lampshade.rotateZ( -rotationStep );
-        if (rotationLimit >= -3*rotationStep) {
-=======
         if (rotationLimit >= -30*rotationStep) {
             rotateAboutPoint(lamp.lampshade, new THREE.Vector3(0, 18.1, 0), new THREE.Vector3(0, 0, 1), -rotationStep);
->>>>>>> 9883366512b9c96f3e9e2cc9ab6f643a3f65123c
             rotationLimit -= rotationStep
         }
     }
