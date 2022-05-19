@@ -14,6 +14,7 @@ const cameraDist = 45;
 const screenArea = screen.width * screen.height;
 const viewSize = 100;
 
+var objs = [];
 var primitives = [];
 var keyMap = [];
 
@@ -37,6 +38,7 @@ function createPrimitive(x, y, z, angle_x, angle_y, angle_z, color, geometry, si
     primitive.rotateZ(angle_z);
     primitive.add(mesh);
 
+    objs.push(material);
     primitives.push(primitive);
     scene.add(primitive);
 
