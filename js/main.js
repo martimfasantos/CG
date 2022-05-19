@@ -347,6 +347,24 @@ function init() {
 
 }
 
+function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
+    pointIsWorld = (pointIsWorld === undefined)? false : pointIsWorld;
+
+    if(pointIsWorld){
+        obj.parent.localToWorld(obj.position); // compensate for world coordinate
+    }
+
+    obj.position.sub(point); // remove the offset
+    obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
+    obj.position.add(point); // re-add the offset
+
+    if(pointIsWorld){
+        obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
+    }
+
+    obj.rotateOnAxis(axis, theta); // rotate the OBJECT
+}
+
 function animate() {
     'use strict';
     
@@ -388,15 +406,26 @@ function animate() {
         lamp.neck.rotateY( -rotationStep );
     }
     if (keyMap[90] == true || keyMap[122] == true) { //Z or z
+<<<<<<< HEAD
         // lamp.lampshade.rotateOnAxis( axis, rotationStep );
         lamp.lampshade.mesh.rotation.y += -rotationStep;
         if (rotationLimit <= 3*rotationStep) {
+=======
+
+        if (rotationLimit <= 30*rotationStep) {
+            rotateAboutPoint(lamp.lampshade, new THREE.Vector3(0, 18.1, 0), new THREE.Vector3(0, 0, 1), rotationStep);
+>>>>>>> 9883366512b9c96f3e9e2cc9ab6f643a3f65123c
             rotationLimit += rotationStep;
-        }
+        }   
     }
     if (keyMap[88] == true || keyMap[120] == true) { //X or x
+<<<<<<< HEAD
         lamp.lampshade.rotateZ( -rotationStep );
         if (rotationLimit >= -3*rotationStep) {
+=======
+        if (rotationLimit >= -30*rotationStep) {
+            rotateAboutPoint(lamp.lampshade, new THREE.Vector3(0, 18.1, 0), new THREE.Vector3(0, 0, 1), -rotationStep);
+>>>>>>> 9883366512b9c96f3e9e2cc9ab6f643a3f65123c
             rotationLimit -= rotationStep
         }
     }
