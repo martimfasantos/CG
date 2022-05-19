@@ -1,17 +1,18 @@
 /* global THREE */
 
 var camera, scene, renderer;
+var worldAxisHelper;
 var clock = new THREE.Clock();
 
-var speed = 40;
+var speed = 35;
 const distance = 1;
 const angle = 0.05;
 var rotationLimit = 0;
 
 var defaultCamera, frontCamera, topCamera, lateralCamera;
-const cameraDist = 50;
-const originalAspect = window.innerWidth / window.innerHeight;
-const viewSize = 20;
+const cameraDist = 45;
+const screenArea = screen.width * screen.height;
+const viewSize = 100;
 
 var primitives = [];
 var keyMap = [];
@@ -29,11 +30,11 @@ function createPrimitive(x, y, z, angle_x, angle_y, angle_z, color, geometry, si
     const material = new THREE.MeshPhongMaterial({ color: color, wireframe: true, side: side, map: texture});
     const _geometry = geometry;
     const mesh = new THREE.Mesh(_geometry, material);
-    mesh.rotation.x = angle_x;
-    mesh.rotation.y = angle_y;
-    mesh.rotation.z = angle_z;
 
-    mesh.position.set(x, y, z);
+    primitive.position.set(x, y, z);
+    primitive.rotateX(angle_x);
+    primitive.rotateY(angle_y);
+    primitive.rotateZ(angle_z);
     primitive.add(mesh);
 
     primitives.push(primitive);
@@ -56,7 +57,7 @@ function createLamp(x, y, z, angle_x, angle_y, angle_z){
     const curve = new THREE.CatmullRomCurve3( [
         new THREE.Vector3( 0, 18, 4.5 ),
         new THREE.Vector3( 0, 20, 0 ),
-        new THREE.Vector3( 0, 0.5, 0 )]);
+        new THREE.Vector3( 0, 0.5, 0 )] );
 
     const neck = createPrimitive(x, y, z, 0, 0, 0, 0xA8A8A8,
         new THREE.TubeGeometry(curve, 20, 1, 8, closed = false), THREE.DoubleSide, null);
@@ -80,9 +81,9 @@ function createCamera(x, y, z) {
                                           1,
                                           1000 );
     // Position
-    camera.translateX(x);
-    camera.translateY(y);
-    camera.translateZ(z);
+    camera.position.x = x;
+    camera.position.y = y;
+    camera.position.z = z;
 
     // Point Light
     const light = new THREE.PointLight(0xffffff, 1);
@@ -103,9 +104,9 @@ function createOrthographicCamera(x, y, z) {
                                                        1, 
                                                        1000 );
     // Position
-    orthographicCamera.translateX(x);
-    orthographicCamera.translateY(y);
-    orthographicCamera.translateZ(z);
+    orthographicCamera.position.x = x;
+    orthographicCamera.position.y = y;
+    orthographicCamera.position.z = z;
 
     // Point Light
     const light = new THREE.PointLight(0xffffff, 1);
@@ -120,13 +121,19 @@ function createOrthographicCamera(x, y, z) {
 function resizeCamera(camera){
     'use strict';
 
-    var aspect = window.innerWidth / window.innerHeight;
-    var change = originalAspect / aspect;
-    var newViewSize = viewSize * change;
-    camera.left = -aspect * newViewSize / 2;
-    camera.right = aspect * newViewSize  / 2;
-    camera.top = newViewSize / 2;
-    camera.bottom = -newViewSize / 2;
+    if (camera instanceof THREE.OrthographicCamera){
+
+        const windowArea = window.innerWidth * window.innerHeight;
+        camera.left = window.innerWidth / - 20;
+        camera.right = window.innerWidth / 20;
+        camera.top = window.innerHeight / 20;
+        camera.bottom = window.innerHeight  / - 20;
+
+        camera.zoom = windowArea / screenArea;
+
+    } else {
+        camera.aspect = window.innerWidth / window.innerHeight;
+    } 
             
     camera.updateProjectionMatrix();
 
@@ -207,7 +214,7 @@ function createObjects() {
     
     // --------------------------------
 
-    // Random mambo
+    // Cylinder with donut
     createPrimitive(-20, 23, 8, degreesToRadians(70), 0, 0, 0x8557CB,
         new THREE.CylinderGeometry(2, 4, 40, 18), THREE.DoubleSide, null);
     createPrimitive(-20, 23, 8, degreesToRadians(-20), 0, 0, 0x957DAD,
@@ -237,8 +244,9 @@ function createScene() {
     'use strict';
 
     scene = new THREE.Scene();
-    
-    scene.add(new THREE.AxisHelper(10));
+
+    worldAxisHelper = new THREE.AxisHelper(10);
+    scene.add(worldAxisHelper);
 
     const light = new THREE.AmbientLight(0xFFFFFF);
     scene.add(light);
@@ -266,28 +274,22 @@ function onKeyDown(e) {
             camera = lateralCamera;
             break; 
         case 52: //4
-            scene.traverse(function (node) {
-                if (node instanceof THREE.Mesh) {
-                    node.material.wireframe = !node.material.wireframe;
-                }
-            });
+            for (var i = 0; i < objs.length; i++) {
+                objs[i].wireframe = !objs[i].wireframe;
+            }
             break;
         case 69:  //E
         case 101: //e
-            scene.traverse(function (node) {
-                if (node instanceof THREE.AxisHelper) {
-                    node.visible = !node.visible;
-                }
-            });
+            worldAxisHelper.visible = !worldAxisHelper.visible;
             break;
-        case 77: //M
+        case 77:  //M
         case 109: //m
             if (speed < 300) {
                 speed += 10; 
                 console.log(speed);
             }
             break;
-        case 78: //N
+        case 78:  //N
         case 110: //n
             if (speed > 10) {
                 speed -= 10;
@@ -347,24 +349,6 @@ function init() {
 
 }
 
-function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
-    pointIsWorld = (pointIsWorld === undefined)? false : pointIsWorld;
-
-    if(pointIsWorld){
-        obj.parent.localToWorld(obj.position); // compensate for world coordinate
-    }
-
-    obj.position.sub(point); // remove the offset
-    obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
-    obj.position.add(point); // re-add the offset
-
-    if(pointIsWorld){
-        obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
-    }
-
-    obj.rotateOnAxis(axis, theta); // rotate the OBJECT
-}
-
 function animate() {
     'use strict';
     
@@ -374,30 +358,30 @@ function animate() {
 
     // Translation
     if (keyMap[38] == true) { //ArrowUp
-        lamp.base.translateY( translationStep );
+        lamp.base.position.y += translationStep;
     }    
     if (keyMap[40] == true) { //ArrowDown
-        lamp.base.translateY( -translationStep );
+        lamp.base.position.y -= translationStep;
     } 
     if (keyMap[39] == true) { //ArrowRight
-        lamp.base.translateX( translationStep );
+        lamp.base.position.x += translationStep;
     }
     if (keyMap[37] == true) { //ArrowLeft
-        lamp.base.translateX( -translationStep );
+        lamp.base.position.x -= translationStep;
     }
     if (keyMap[68] == true || keyMap[100] == true) { //D or d
-        lamp.base.translateZ( translationStep );
+        lamp.base.position.z += translationStep;
     }  
     if (keyMap[67] == true || keyMap[99] == true) { //C or c
-        lamp.base.translateZ( -translationStep );
+        lamp.base.position.z -= translationStep;
     }
 
     // Rotation
     if (keyMap[81] == true || keyMap[113] == true) { //Q or q
-        lamp.base.rotateY( rotationStep );
+        lamp.base.rotateX( rotationStep );
     }
     if (keyMap[87] == true || keyMap[119] == true) { //W or w
-        lamp.base.rotateY( -rotationStep );
+        lamp.base.rotateX( -rotationStep );
     }
     if (keyMap[65] == true || keyMap[97] == true) { //A or a
         lamp.neck.rotateY( rotationStep );
@@ -406,16 +390,10 @@ function animate() {
         lamp.neck.rotateY( -rotationStep );
     }
     if (keyMap[90] == true || keyMap[122] == true) { //Z or z
-        if (rotationLimit <= 30*rotationStep) {
-            rotateAboutPoint(lamp.lampshade, new THREE.Vector3(0, 18.1, 0), new THREE.Vector3(0, 0, 1), rotationStep);
-            rotationLimit += rotationStep;
-        }   
+        lamp.lampshade.rotateY( rotationStep );
     }
     if (keyMap[88] == true || keyMap[120] == true) { //X or x
-        if (rotationLimit >= -30*rotationStep) {
-            rotateAboutPoint(lamp.lampshade, new THREE.Vector3(0, 18.1, 0), new THREE.Vector3(0, 0, 1), -rotationStep);
-            rotationLimit -= rotationStep
-        }
+        lamp.lampshade.rotateY( -rotationStep );
     }
 
     render();
