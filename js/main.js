@@ -54,7 +54,6 @@ function createLamp(x, y, z, angle_x, angle_y, angle_z){
 
     const lampshade = createPrimitive( x, y + 16.9 , z + 7, angle_x + degreesToRadians(115), angle_y, angle_z, 0xF5F5F5,
         new THREE.CylinderGeometry(4.5, 1, 6, 20, 20, openEnded = true), THREE.DoubleSide, null);
-    axis = new THREE.Vector3(0, 18, 4.5 ).normalize();
     
     const curve = new THREE.CatmullRomCurve3( [
         new THREE.Vector3( 0, 18, 4.5 ),
