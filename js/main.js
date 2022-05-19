@@ -98,10 +98,10 @@ function createCamera() {
 function createOrthographicCamera(x, y, z) {
     'use strict';
 
-    var orthographicCamera = new THREE.OrthographicCamera( window.innerWidth / - 2,
-                                                       window.innerWidth / 2,
-                                                       window.innerHeight / 2, 
-                                                       window.innerHeight / -2, 
+    var orthographicCamera = new THREE.OrthographicCamera( window.innerWidth / - 20,
+                                                       window.innerWidth / 20,
+                                                       window.innerHeight / 20, 
+                                                       window.innerHeight / -20, 
                                                        1, 
                                                        1000 );
     // Position
@@ -349,6 +349,24 @@ function init() {
 
 }
 
+function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
+    pointIsWorld = (pointIsWorld === undefined)? false : pointIsWorld;
+
+    if(pointIsWorld){
+        obj.parent.localToWorld(obj.position); // compensate for world coordinate
+    }
+
+    obj.position.sub(point); // remove the offset
+    obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
+    obj.position.add(point); // re-add the offset
+
+    if(pointIsWorld){
+        obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
+    }
+
+    obj.rotateOnAxis(axis, theta); // rotate the OBJECT
+}
+
 function animate() {
     'use strict';
     
@@ -390,14 +408,15 @@ function animate() {
         lamp.neck.rotateY( -rotationStep );
     }
     if (keyMap[90] == true || keyMap[122] == true) { //Z or z
-        if (rotationLimit <= 3*rotationStep) {
-            lamp.lampshade.rotateY( rotationStep );
+
+        if (rotationLimit <= 30*rotationStep) {
+            rotateAboutPoint(lamp.lampshade, new THREE.Vector3(0, 18.1, 0), new THREE.Vector3(0, 0, 1), rotationStep);
             rotationLimit += rotationStep;
-        }
+        }   
     }
     if (keyMap[88] == true || keyMap[120] == true) { //X or x
-        if (rotationLimit >= -3*rotationStep) {
-            lamp.lampshade.rotateY( -rotationStep );
+        if (rotationLimit >= -30*rotationStep) {
+            rotateAboutPoint(lamp.lampshade, new THREE.Vector3(0, 18.1, 0), new THREE.Vector3(0, 0, 1), -rotationStep);
             rotationLimit -= rotationStep
         }
     }
