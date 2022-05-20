@@ -4,20 +4,23 @@ var camera, scene, renderer;
 var worldAxisHelper;
 var clock = new THREE.Clock();
 
+// Rotation
 var speed = 35;
 const distance = 1;
 const angle = 0.05;
-var rotationLimit = 0;
 
+// Cameras
 var defaultCamera, frontCamera, topCamera, lateralCamera;
 const cameraDist = 45;
 const screenArea = screen.width * screen.height;
 const viewSize = 100;
 
-var objs = [];
+// Arrays
+var materials = [];
 var primitives = [];
 var keyMap = [];
 
+// Articulated Object
 var lamp = { base : null,
              neck : null,
              lampshade : null
@@ -38,7 +41,7 @@ function createPrimitive(x, y, z, angle_x, angle_y, angle_z, color, geometry, si
     primitive.rotateZ(angle_z);
     primitive.add(mesh);
 
-    objs.push(material);
+    materials.push(material);
     primitives.push(primitive);
     scene.add(primitive);
 
@@ -275,8 +278,8 @@ function onKeyDown(e) {
             camera = lateralCamera;
             break; 
         case 52: //4
-            for (var i = 0; i < objs.length; i++) {
-                objs[i].wireframe = !objs[i].wireframe;
+            for (var i = 0; i < materials.length; i++) {
+                materials[i].wireframe = !materials[i].wireframe;
             }
             break;
         case 69:  //E
