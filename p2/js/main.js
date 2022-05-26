@@ -13,7 +13,6 @@ const angle = 0.05;
 var defaultCamera, frontCamera, topCamera, lateralCamera;
 const cameraDist = 45;
 const screenArea = screen.width * screen.height;
-const viewSize = 100;
 
 // Arrays
 var materials = [];
@@ -21,8 +20,10 @@ var primitives = [];
 var keyMap = [];
 
 // Objects
-const R = 40;
-var spacheship;
+const R = 20;
+const junks = 20;
+const junkMaxSize = 15;
+var spaceship;
 
 
 function createPrimitive(x, y, z, angle_x, angle_y, angle_z, color, geometry, side, texture){
@@ -44,6 +45,42 @@ function createPrimitive(x, y, z, angle_x, angle_y, angle_z, color, geometry, si
     scene.add(primitive);
 
     return primitive;
+
+}
+
+function createRandomPrimitive(pos) {
+
+    const option = Math.random();
+    const size = Math.random()*junkMaxSize;
+    const angle = Math.random()*360;
+    var primitive;
+
+    if (option < 0.33) {
+        primitive = createPrimitive(pos.x, -pos.y, pos.z, 0, 0, 0, 0xB98D64,
+            new THREE.SphereGeometry(size, 10, 10, 0, Math.PI), THREE.DoubleSide, null);
+    } else if ( 0.33 < option < 0.66) {
+        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, degreesToRadians(angle), 0x437f5b,
+            new THREE.BoxGeometry(size, 1/2 * size, size, 30, 20), THREE.DoubleSide, null);
+    } else {
+        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(-20), 0, 0, 0x60646B,
+            new THREE.IcosahedronGeometry(3 * size/junkMaxSize, 1), THREE.DoubleSide, null);
+    }
+
+    scene.add(primitive);
+}
+
+function createSpaceship(body, front, propellers) {
+
+    spaceship = new THREE.Object3D();
+    spaceship.add(body);
+    spaceship.add(front);
+    spaceship.add(propellers[0]);
+    spaceship.add(propellers[1]);
+    spaceship.add(propellers[2]);
+    spaceship.add(propellers[3]);
+    spaceship.position.set(0, 1.2*R, -1.2*R);
+    spaceship.rotateX(Math.PI/2);
+    scene.add(spaceship);
 
 }
 
@@ -132,45 +169,38 @@ function createObjects() {
 
 
     // Planet
-    createPrimitive(0, 0, 0, 0, 0, 0, 0x40E0D0,
-        new THREE.SphereGeometry(R, 10, 10), THREE.DoubleSide, null);
+    createPrimitive(0, 0, 0, 0, 0, 0, 0xA17D54,
+        new THREE.SphereGeometry(R, 20, 20), THREE.DoubleSide, null);
 
     // --------------------------------
 
     // Spaceship
-    const body = createPrimitive(0, 30, 0, 0, 0, 0, 0xB87333,
-        new THREE.CylinderGeometry(5, 5, 16, 35), THREE.DoubleSide, null);
-    const front = createPrimitive(0, 46, 0, 0, 0, 0, 0xB87333,
-        new THREE.CylinderGeometry(5, 5, 16, 35), THREE.DoubleSide, null);
-    const propeller1 = createPrimitive(5, 30, 0, 0, 0, 0, 0xB87333,
-        new THREE.CapsuleGeometry( 1, 1, 4, 8 ), THREE.DoubleSide, null);
-    const propeller2 = createPrimitive(0, 30, 5, 0, 0, 0, 0xB87333,
-        new THREE.CapsuleGeometry( 1, 1, 4, 8 ), THREE.DoubleSide, null);
-    const propeller3 = createPrimitive(-5, 30, 0, 0, 0, 0, 0xB87333,
-        new THREE.CapsuleGeometry( 1, 1, 4, 8 ), THREE.DoubleSide, null);
-    const propeller4 = createPrimitive(0, 30, -5, 0, 0, 0, 0xB87333,
-        new THREE.CapsuleGeometry( 1, 1, 4, 8 ), THREE.DoubleSide, null);
+    const radius = R/21;
+    const length = R/7;
+    const body = createPrimitive(0, 1.2*R, 0, 0, 0, 0, 0xC8BFBF,
+        new THREE.CylinderGeometry(radius, radius, length, 30), THREE.DoubleSide, null);
+    const front = createPrimitive(0, 1.2*R + length/2 + length/3, 0, 0, 0, 0, 0xF96262,
+        new THREE.CylinderGeometry(radius/8, radius, length/1.5, 30), THREE.DoubleSide, null);
+    const propeller1 = createPrimitive(radius, 1.2*R - length/2, 0, 0, 0, 0, 0x8F8383,
+        new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
+    const propeller2 = createPrimitive(0, 1.2*R-length/2, radius, 0, 0, 0, 0x8F8383,
+        new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
+    const propeller3 = createPrimitive(-radius, 1.2*R-length/2, 0, 0, 0, 0, 0x8F8383,
+        new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
+    const propeller4 = createPrimitive(0, 1.2*R-length/2, -radius, 0, 0, 0, 0x8F8383,
+        new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
 
-    body.add(propeller1);
-    body.add(propeller2);
-    body.add(propeller3);
-    body.add(propeller4);
-    body.add(front);
-    spacheship = body;
+    createSpaceship(body, front, [propeller1, propeller2, propeller3, propeller4]);
 
     // --------------------------------
 
     // Space junk
-    createPrimitive(5, -5, 26, 0, 0, 0, 0xB98D64,
-        new THREE.SphereGeometry(3, 10, 10, 0, Math.PI), THREE.DoubleSide, null);
-    createPrimitive(5, -5, 10, 0, 0, 0, 0xB98D64,
-        new THREE.SphereGeometry(3, 10, 10, Math.PI, Math.PI), THREE.DoubleSide, null);
-    createPrimitive(13, 25, -15, degreesToRadians(45), degreesToRadians(90), degreesToRadians(-30), 0x437f5b,
-        new THREE.BoxGeometry(1, 20, 25, 30, 20), THREE.DoubleSide, null);
-    createPrimitive(-8, 33, -10, degreesToRadians(45), degreesToRadians(45), degreesToRadians(45), 0xff6600,
-        new THREE.BoxGeometry(8, 8, 8, 2, 2), THREE.DoubleSide, null);
-    createPrimitive(16.2, 4.7, 9.7, degreesToRadians(-20), degreesToRadians(30), 0, 0x60646B,
-        new THREE.IcosahedronGeometry(2.2, 1), THREE.DoubleSide, null);
+    for (var i = 0; i < junks; i++) {
+        var spherical_coord = new THREE.Spherical(R, Math.random() * (2*Math.PI), Math.random() * Math.PI);
+        const pos = new THREE.Vector3().setFromSphericalCoords(spherical_coord);
+
+        createRandomPrimitive(pos);
+    }
 
     // --------------------------------
 
@@ -181,7 +211,7 @@ function createScene() {
 
     scene = new THREE.Scene();
 
-    worldAxisHelper = new THREE.AxisHelper(10);
+    worldAxisHelper = new THREE.AxesHelper(10);
     scene.add(worldAxisHelper);
 
     const light = new THREE.AmbientLight(0xFFFFFF);
