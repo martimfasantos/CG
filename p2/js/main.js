@@ -57,13 +57,13 @@ function createRandomPrimitive(pos) {
 
     if (option < 0.33) {
         primitive = createPrimitive(pos.x, -pos.y, pos.z, 0, 0, 0, 0xB98D64,
-            new THREE.SphereGeometry(size, 10, 10, 0, Math.PI), THREE.DoubleSide, null);
-    } else if ( 0.33 < option < 0.66) {
+            new THREE.SphereGeometry(size, 10, 10, 0, 2 * Math.PI), THREE.DoubleSide, null);
+    } else if ( 0.33 < option && option < 0.66) {
         primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, degreesToRadians(angle), 0x437f5b,
             new THREE.BoxGeometry(size, 1/2 * size, size, 30, 20), THREE.DoubleSide, null);
     } else {
         primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(-20), 0, 0, 0x60646B,
-            new THREE.IcosahedronGeometry(3 * size/junkMaxSize, 1), THREE.DoubleSide, null);
+            new THREE.IcosahedronGeometry(3 * size/junkMaxSize, 0), THREE.DoubleSide, null);
     }
 
     scene.add(primitive);
