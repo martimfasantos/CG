@@ -22,7 +22,7 @@ var keyMap = [];
 // Objects
 const R = 20;
 const junks = 20;
-const junkMaxSize = 15;
+const junkMaxSize = 3;
 var spaceship;
 
 
@@ -196,8 +196,8 @@ function createObjects() {
 
     // Space junk
     for (var i = 0; i < junks; i++) {
-        var spherical_coord = new THREE.Spherical(R, Math.random() * (2*Math.PI), Math.random() * Math.PI);
-        const pos = new THREE.Vector3().setFromSphericalCoords(spherical_coord);
+        var spherical_coord = new THREE.Spherical(1.2*R, Math.random() * (2*Math.PI), Math.random() * Math.PI);
+        const pos = new THREE.Vector3().setFromSpherical(spherical_coord);
 
         createRandomPrimitive(pos);
     }
