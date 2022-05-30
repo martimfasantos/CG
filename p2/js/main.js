@@ -2,12 +2,15 @@
 
 var camera, scene, renderer;
 var worldAxisHelper;
-var clock = new THREE.Clock();
+const clock = new THREE.Clock();
 
-// Rotation
-var speed = 35;
-const distance = 1;
-const angle = 0.05;
+// Translaction
+var speed = 8;
+const deltaAngle = 1/(2*Math.PI);
+
+const maxSpeed = 20;
+const minSpeed = 2;
+const speedDelta = 2;
 
 // Cameras
 var defaultCamera, frontCamera, topCamera, lateralCamera;
@@ -22,7 +25,9 @@ var keyMap = [];
 // Objects
 const R = 20;
 const junks = 20;
-const junkMaxSize = 15;
+const junkMaxSize = R/20;
+const junkMinSize = R/24;
+var objSphCoords = []; // [spaceship, junk1, junk2, ... , junkN]
 var spaceship;
 
 
@@ -48,22 +53,28 @@ function createPrimitive(x, y, z, angle_x, angle_y, angle_z, color, geometry, si
 
 }
 
-function createRandomPrimitive(pos) {
+function createRandomPrimitive(sphericalCoords) {
 
+    // Position
+    const pos = new THREE.Vector3().setFromSpherical(sphericalCoords);
+
+    // Settings
     const option = Math.random();
-    const size = Math.random()*junkMaxSize;
+    const size = junkMinSize + Math.random()*(junkMaxSize - junkMinSize);
     const angle = Math.random()*360;
+    const randomColor = Math.floor(Math.random()*16777215).toString(16);
+
     var primitive;
 
     if (option < 0.33) {
-        primitive = createPrimitive(pos.x, -pos.y, pos.z, 0, 0, 0, 0xB98D64,
-            new THREE.SphereGeometry(size, 10, 10, 0, Math.PI), THREE.DoubleSide, null);
-    } else if ( 0.33 < option < 0.66) {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, degreesToRadians(angle), 0x437f5b,
-            new THREE.BoxGeometry(size, 1/2 * size, size, 30, 20), THREE.DoubleSide, null);
+        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, randomColor,
+            new THREE.SphereGeometry(size, 10, 10), THREE.DoubleSide, null);
+    } else if ( 0.33 < option && option < 0.66) {
+        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, degreesToRadians(angle), 0, randomColor,
+            new THREE.BoxGeometry(size, size, size, 10, 10), THREE.DoubleSide, null);
     } else {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(-20), 0, 0, 0x60646B,
-            new THREE.IcosahedronGeometry(3 * size/junkMaxSize, 1), THREE.DoubleSide, null);
+        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, 0, randomColor,
+            new THREE.IcosahedronGeometry(size, 0), THREE.DoubleSide, null);
     }
 
     scene.add(primitive);
@@ -78,8 +89,12 @@ function createSpaceship(body, front, propellers) {
     spaceship.add(propellers[1]);
     spaceship.add(propellers[2]);
     spaceship.add(propellers[3]);
-    spaceship.position.set(0, 1.2*R, -1.2*R);
-    spaceship.rotateX(Math.PI/2);
+
+    // Spaceship random start position
+    const sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
+    spaceship.position.setFromSpherical(sphericalCoords);
+    spaceship.lookAt(0, 0, 0);
+    
     scene.add(spaceship);
 
 }
@@ -175,19 +190,19 @@ function createObjects() {
     // --------------------------------
 
     // Spaceship
-    const radius = R/21;
-    const length = R/7;
-    const body = createPrimitive(0, 1.2*R, 0, 0, 0, 0, 0xC8BFBF,
-        new THREE.CylinderGeometry(radius, radius, length, 30), THREE.DoubleSide, null);
-    const front = createPrimitive(0, 1.2*R + length/2 + length/3, 0, 0, 0, 0, 0xF96262,
-        new THREE.CylinderGeometry(radius/8, radius, length/1.5, 30), THREE.DoubleSide, null);
-    const propeller1 = createPrimitive(radius, 1.2*R - length/2, 0, 0, 0, 0, 0x8F8383,
+    const radius = R/17;
+    const length = R/5;
+    const body = createPrimitive(0, 0, 0, 0, 0, 0, 0xC8BFBF,
+        new THREE.CylinderGeometry(radius, radius, length, 25), THREE.DoubleSide, null);
+    const front = createPrimitive(0, length/2 + length/3, 0, 0, 0, 0, 0xF96262,
+        new THREE.CylinderGeometry(radius/7, radius, length/1.5, 25), THREE.DoubleSide, null);
+    const propeller1 = createPrimitive(radius, -length/2, 0, 0, 0, 0, 0x8F8383,
         new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
-    const propeller2 = createPrimitive(0, 1.2*R-length/2, radius, 0, 0, 0, 0x8F8383,
+    const propeller2 = createPrimitive(0, -length/2, radius, 0, 0, 0, 0x8F8383,
         new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
-    const propeller3 = createPrimitive(-radius, 1.2*R-length/2, 0, 0, 0, 0, 0x8F8383,
+    const propeller3 = createPrimitive(-radius, -length/2, 0, 0, 0, 0, 0x8F8383,
         new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
-    const propeller4 = createPrimitive(0, 1.2*R-length/2, -radius, 0, 0, 0, 0x8F8383,
+    const propeller4 = createPrimitive(0, -length/2, -radius, 0, 0, 0, 0x8F8383,
         new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
 
     createSpaceship(body, front, [propeller1, propeller2, propeller3, propeller4]);
@@ -196,10 +211,13 @@ function createObjects() {
 
     // Space junk
     for (var i = 0; i < junks; i++) {
-        var spherical_coord = new THREE.Spherical(R, Math.random() * (2*Math.PI), Math.random() * Math.PI);
-        const pos = new THREE.Vector3().setFromSphericalCoords(spherical_coord);
+        var sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
 
-        createRandomPrimitive(pos);
+        while (objSphCoords.includes(sphericalCoords)){
+            sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
+        }
+        
+        createRandomPrimitive(sphericalCoords);
     }
 
     // --------------------------------
@@ -250,15 +268,15 @@ function onKeyDown(e) {
             break;
         case 77:  //M
         case 109: //m
-            if (speed < 300) {
-                speed += 10; 
+            if (speed + speedDelta < maxSpeed) {
+                speed += speedDelta; 
                 console.log(speed);
             }
             break;
         case 78:  //N
         case 110: //n
-            if (speed > 10) {
-                speed -= 10;
+            if (speed - speedDelta > minSpeed) {
+                speed -= speedDelta;
                 console.log(speed);
             }
             break;
@@ -318,48 +336,90 @@ function init() {
 function animate() {
     'use strict';
     
-    var delta = clock.getDelta();
-    const rotationStep = angle * speed * delta;
-    const translationStep = distance * speed * delta;
+    var clockDelta = clock.getDelta();
+    const translationDelta = deltaAngle * speed * clockDelta;
 
     // Translation
     if (keyMap[38] == true) { //ArrowUp
-        lamp.base.position.y += translationStep;
-    }    
+        const oldPos = new THREE.Spherical().setFromVector3(spaceship.position);
+        var newPos;
+        if (oldPos.theta < 0) {
+            newPos = new THREE.Spherical(oldPos.radius, oldPos.phi + translationDelta, oldPos.theta);
+        } else { 
+            newPos = new THREE.Spherical(oldPos.radius, oldPos.phi - translationDelta, oldPos.theta);
+        }
+        directSpacheship(newPos);
+        spaceship.position.setFromSpherical(newPos);
+    }   
+
     if (keyMap[40] == true) { //ArrowDown
-        lamp.base.position.y -= translationStep;
+        const oldPos = new THREE.Spherical().setFromVector3(spaceship.position);
+        var newPos;
+        if (oldPos.theta < 0) { 
+            newPos = new THREE.Spherical(oldPos.radius, oldPos.phi - translationDelta, oldPos.theta);
+        } else { 
+            newPos = new THREE.Spherical(oldPos.radius, oldPos.phi + translationDelta, oldPos.theta);
+        }
+        directSpacheship(newPos);
+        spaceship.position.setFromSpherical(newPos);
     } 
+
     if (keyMap[39] == true) { //ArrowRight
-        lamp.base.position.x += translationStep;
-    }
-    if (keyMap[37] == true) { //ArrowLeft
-        lamp.base.position.x -= translationStep;
-    }
-    if (keyMap[68] == true || keyMap[100] == true) { //D or d
-        lamp.base.position.z += translationStep;
-    }  
-    if (keyMap[67] == true || keyMap[99] == true) { //C or c
-        lamp.base.position.z -= translationStep;
+        const oldPos = new THREE.Spherical().setFromVector3(spaceship.position);
+        const newPos = new THREE.Spherical(oldPos.radius, oldPos.phi, oldPos.theta + translationDelta);
+        directSpacheship(newPos);
+        spaceship.position.setFromSpherical(newPos);
     }
 
-    // Rotation
-    if (keyMap[81] == true || keyMap[113] == true) { //Q or q
-        lamp.base.rotateX( rotationStep );
+    if (keyMap[37] == true) { //ArrowLeft
+        const oldPos = new THREE.Spherical().setFromVector3(spaceship.position);
+        const newPos = new THREE.Spherical(oldPos.radius, oldPos.phi, oldPos.theta - translationDelta);
+        directSpacheship(newPos);
+        spaceship.position.setFromSpherical(newPos);
     }
-    if (keyMap[87] == true || keyMap[119] == true) { //W or w
-        lamp.base.rotateX( -rotationStep );
-    }
-    if (keyMap[65] == true || keyMap[97] == true) { //A or a
-        lamp.neck.rotateY( rotationStep );
-    }
-    if (keyMap[83] == true || keyMap[115] == true) { //S or s
-        lamp.neck.rotateY( -rotationStep );
-    }
-    if (keyMap[90] == true || keyMap[122] == true) { //Z or z
-        lamp.lampshade.rotateY( rotationStep );
-    }
-    if (keyMap[88] == true || keyMap[120] == true) { //X or x
-        lamp.lampshade.rotateY( -rotationStep );
+
+    // Aux function
+    function directSpacheship(newPos) {
+        
+        spaceship.lookAt(0, 0, 0);
+
+        // Combinations 
+        if (keyMap[38] == true && keyMap[39] == true) { //ArrowUp + ArrowRight
+            if (newPos.theta < 0)
+                spaceship.rotateX(Math.PI);
+            spaceship.rotateZ(Math.PI/4);
+
+        } else if (keyMap[38] == true && keyMap[37] == true) { //ArrowUp + ArrowLeft
+            if (newPos.theta < 0)
+                spaceship.rotateX(Math.PI);
+            spaceship.rotateZ(-Math.PI/4);
+
+        } else if (keyMap[40] == true && keyMap[39] == true) { //ArrowDown + ArrowRight
+            if (newPos.theta > 0)
+                spaceship.rotateX(-Math.PI);
+            spaceship.rotateZ(Math.PI/4);
+
+        } else if (keyMap[40] == true && keyMap[37] == true) { //ArrowDown + ArrowLeft
+            if (newPos.theta > 0)
+                spaceship.rotateX(-Math.PI);
+            spaceship.rotateZ(-Math.PI/4);
+        }
+
+        else if (keyMap[38] == true) { //ArrowUp
+            if (newPos.theta < 0)
+                spaceship.rotateX(Math.PI);
+
+        } else if (keyMap[40] == true) { //ArrowDown
+            if (newPos.theta > 0)
+                spaceship.rotateX(Math.PI);
+
+        } else if (keyMap[39] == true) { //ArrowRight
+            spaceship.rotateZ(Math.PI/2);
+
+        } else if (keyMap[37] == true) { //ArrowLeft
+            spaceship.rotateZ(-Math.PI/2);
+        }
+
     }
 
     render();
