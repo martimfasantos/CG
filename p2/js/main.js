@@ -380,7 +380,7 @@ function animate() {
 
     // Aux function
     function directSpacheship(newPos) {
-        
+
         spaceship.lookAt(0, 0, 0);
 
         // Combinations 
