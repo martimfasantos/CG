@@ -21,12 +21,14 @@ const screenArea = screen.width * screen.height;
 var materials = [];
 var primitives = [];
 var keyMap = [];
+var primitivesRadius = [];
 
 // Objects
 const R = 20;
 const junks = 20;
 const junkMaxSize = R/20;
 const junkMinSize = R/24;
+const spaceshipHitboxRadius = R/10+R/7.5;
 var objSphCoords = []; // [spaceship, junk1, junk2, ... , junkN]
 var spaceship;
 
@@ -69,12 +71,15 @@ function createRandomPrimitive(sphericalCoords) {
     if (option < 0.33) {
         primitive = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, randomColor,
             new THREE.SphereGeometry(size, 10, 10), THREE.DoubleSide, null);
+        primitivesRadius.push(size);
     } else if ( 0.33 < option && option < 0.66) {
         primitive = createPrimitive(pos.x, pos.y, pos.z, 0, degreesToRadians(angle), 0, randomColor,
             new THREE.BoxGeometry(size, size, size, 10, 10), THREE.DoubleSide, null);
+        primitivesRadius.push(size);
     } else {
         primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, 0, randomColor,
             new THREE.IcosahedronGeometry(size, 0), THREE.DoubleSide, null);
+        primitivesRadius.push(size);
     }
 
     scene.add(primitive);
@@ -186,6 +191,7 @@ function createObjects() {
     // Planet
     createPrimitive(0, 0, 0, 0, 0, 0, 0xA17D54,
         new THREE.SphereGeometry(R, 20, 20), THREE.DoubleSide, null);
+    primitivesRadius.push(R);
 
     // --------------------------------
 
@@ -194,16 +200,22 @@ function createObjects() {
     const length = R/5;
     const body = createPrimitive(0, 0, 0, 0, 0, 0, 0xC8BFBF,
         new THREE.CylinderGeometry(radius, radius, length, 25), THREE.DoubleSide, null);
+    primitivesRadius.push(1.1*length/2);
     const front = createPrimitive(0, length/2 + length/3, 0, 0, 0, 0, 0xF96262,
         new THREE.CylinderGeometry(radius/7, radius, length/1.5, 25), THREE.DoubleSide, null);
+    primitivesRadius.push(1.1*length/3);
     const propeller1 = createPrimitive(radius, -length/2, 0, 0, 0, 0, 0x8F8383,
         new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
+    primitivesRadius.push(1.1*length/6); 
     const propeller2 = createPrimitive(0, -length/2, radius, 0, 0, 0, 0x8F8383,
         new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
+    primitivesRadius.push(1.1*length/6);
     const propeller3 = createPrimitive(-radius, -length/2, 0, 0, 0, 0, 0x8F8383,
         new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
+    primitivesRadius.push(1.1*length/6);
     const propeller4 = createPrimitive(0, -length/2, -radius, 0, 0, 0, 0x8F8383,
         new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
+    primitivesRadius.push(1.1*length/6);
 
     createSpaceship(body, front, [propeller1, propeller2, propeller3, propeller4]);
 
@@ -333,11 +345,29 @@ function init() {
 
 }
 
+function checkcollision() {
+
+    var worldPosition1 = new THREE.Vector3();
+    var worldPosition2 = new THREE.Vector3();
+
+    primitives[1].getWorldPosition(worldPosition1);
+    for (var i = 7; i<primitives.length; i++) {
+        primitives[i].getWorldPosition(worldPosition2);
+        var distance = worldPosition1.distanceTo(worldPosition2);
+        if (distance <= spaceshipHitboxRadius + primitivesRadius[i]) {
+            primitives[i].visible = false;
+        }
+    }
+
+}
+
 function animate() {
     'use strict';
     
     var clockDelta = clock.getDelta();
     const translationDelta = deltaAngle * speed * clockDelta;
+
+    checkcollision();
 
     // Translation
     if (keyMap[38] == true) { //ArrowUp
@@ -407,7 +437,7 @@ function animate() {
 
         else if (keyMap[38] == true) { //ArrowUp
             if (newPos.theta < 0)
-                spaceship.rotateX(Math.PI);
+                spaceship.rotateX(Math.PI);           
 
         } else if (keyMap[40] == true) { //ArrowDown
             if (newPos.theta > 0)
