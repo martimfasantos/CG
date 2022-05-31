@@ -1,7 +1,7 @@
 /* global THREE */
 
 var camera, scene, renderer;
-var worldAxisHelper;
+var worldAxisHelper, spaceshipAxisHelper;
 const clock = new THREE.Clock();
 
 // Translaction
@@ -24,7 +24,7 @@ var keyMap = [];
 var primitivesRadius = [];
 
 // Objects
-const R = 20;
+const R = 40;
 const junks = 20;
 const junkMaxSize = R/20;
 const junkMinSize = R/24;
@@ -273,6 +273,7 @@ function onKeyDown(e) {
         case 69:  //E
         case 101: //e
             worldAxisHelper.visible = !worldAxisHelper.visible;
+            spaceshipAxisHelper.visible = !spaceshipAxisHelper.visible;
             break;
         case 77:  //M
         case 109: //m
@@ -331,8 +332,13 @@ function init() {
     // Cameras
     frontCamera = createOrthographicCamera(0, 0, cameraDist);
     defaultCamera = createCamera(cameraDist, cameraDist, cameraDist);
-    topCamera = createCamera(spaceship.position.x, spaceship.position.y + 50, spaceship.position.z + 50);
+    topCamera = createCamera(spaceship.position.x, spaceship.position.y, spaceship.position.z - cameraDist);
+    
+
     spaceship.add(topCamera);
+    
+    spaceshipAxisHelper = new THREE.AxesHelper(10);
+    spaceship.add(spaceshipAxisHelper);
 
     // Events
     window.addEventListener("keydown", onKeyDown);
@@ -408,17 +414,17 @@ function animate() {
     function directSpacheship(newPos) {
 
         spaceship.lookAt(0, 0, 0);
-        topCamera.lookAt(spaceship.position.x, spaceship.position.y, spaceship.position.z + 10);
+        topCamera.lookAt(spaceship.position.x, spaceship.position.y, spaceship.position.z);
 
         // Combinations 
         if (keyMap[38] == true && keyMap[39] == true) { //ArrowUp + ArrowRight
             if (newPos.theta < 0)
-                spaceship.rotateX(Math.PI);
+               spaceship.rotateZ(Math.PI);
             spaceship.rotateZ(Math.PI/4);
 
         } else if (keyMap[38] == true && keyMap[37] == true) { //ArrowUp + ArrowLeft
             if (newPos.theta < 0)
-                spaceship.rotateX(Math.PI);
+                spaceship.rotateZ(Math.PI);
             spaceship.rotateZ(-Math.PI/4);
 
         } else if (keyMap[40] == true && keyMap[39] == true) { //ArrowDown + ArrowRight
@@ -434,11 +440,11 @@ function animate() {
 
         else if (keyMap[38] == true) { //ArrowUp
             if (newPos.theta < 0)
-                spaceship.rotateX(Math.PI);           
+                spaceship.rotateZ(Math.PI);           
 
         } else if (keyMap[40] == true) { //ArrowDown
             if (newPos.theta > 0)
-                spaceship.rotateX(Math.PI);
+                spaceship.rotateZ(Math.PI);
 
         } else if (keyMap[39] == true) { //ArrowRight
             spaceship.rotateZ(Math.PI/2);
