@@ -20,8 +20,9 @@ const minSpeed = 1;
 const speedDelta = 1;
 
 // Cameras
-var defaultCamera, frontCamera, topCamera;
-const cameraDist = 45;
+var defaultCamera, frontCamera, rocketCamera;
+const cameraDist = 50;
+const cameraOffset = 10;
 const screenArea = screen.width * screen.height;
 
 // Arrays
@@ -141,15 +142,19 @@ function createRocket(body, front, propellers) {
     rocket.add(propellers[3]);
 
     // Rocket random start position
-    rocketSphCoords.radius = 1.2 * R;
-    rocketSphCoords.phi = Math.random() * Math.PI;
-    rocketSphCoords.theta = Math.random() * (2*Math.PI);
+    rocketSphCoords.radius = 1.2*R;
+    rocketSphCoords.phi = Math.PI/2;
+    rocketSphCoords.theta = 0;
 
     const initialPos = toCartesianCoords(rocketSphCoords.radius, rocketSphCoords.phi, rocketSphCoords.theta);
     rocket.position.x = initialPos.x;
     rocket.position.y = initialPos.y;
     rocket.position.z = initialPos.z;
     rocket.lookAt(0, 0, 0);
+
+    rocketAxisHelper = new THREE.AxesHelper(10);
+    rocketAxisHelper.visible = false;
+    rocket.add(rocketAxisHelper);
     
     scene.add(rocket);
 
@@ -159,7 +164,7 @@ function degreesToRadians(degrees){
   return degrees * (Math.PI/180);
 }
 
-function createCamera(x, y, z) {
+function createCamera(x, y, z, lookAt) {
     'use strict';
     camera = new THREE.PerspectiveCamera( 70,
                                           window.innerWidth / window.innerHeight,
@@ -170,30 +175,12 @@ function createCamera(x, y, z) {
     camera.position.y = y;
     camera.position.z = z;
 
-    // Point Light
-    // const light = new THREE.PointLight(0xffffff, 1);
-    // camera.add(light);
-
-    camera.lookAt(scene.position);
+    camera.lookAt(lookAt);
 
     return camera;
 }
 
-function createRocketCamera(x, y, z) {
-    'use strict';
-    camera = new THREE.PerspectiveCamera( 70,
-                                          window.innerWidth / window.innerHeight,
-                                          1,
-                                          1000 );
-
-    rocket.add(camera);
-    camera.position.z = 50;
-    camera.lookAt(scene.position);
-
-    return camera;
-}
-
-function createOrthographicCamera(x, y, z) {
+function createOrthographicCamera(x, y, z, lookAt) {
     'use strict';
 
     var orthographicCamera = new THREE.OrthographicCamera( window.innerWidth / - 20,
@@ -206,12 +193,8 @@ function createOrthographicCamera(x, y, z) {
     orthographicCamera.position.x = x;
     orthographicCamera.position.y = y;
     orthographicCamera.position.z = z;
-
-    // Point Light
-    //const light = new THREE.PointLight(0xffffff, 1);
-    //camera.add(light);
     
-    orthographicCamera.lookAt(scene.position);
+    orthographicCamera.lookAt(lookAt);
 
     return orthographicCamera;
     
@@ -243,7 +226,7 @@ function onWindowResize() {
     
     resizeCamera(defaultCamera);
     resizeCamera(frontCamera);
-    resizeCamera(topCamera);
+    resizeCamera(rocketCamera);
 
     renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -341,7 +324,7 @@ function onKeyDown(e) {
             camera = defaultCamera;
             break;
         case 51: //3
-            camera = topCamera;
+            camera = rocketCamera;
             break; 
         case 52: //4
             for (var i = 0; i < materials.length; i++) {
@@ -409,13 +392,9 @@ function init() {
     scene.add(spotLight2);
 
     // Cameras
-    frontCamera = createOrthographicCamera(0, 0, cameraDist);
-    defaultCamera = createCamera(cameraDist, cameraDist, cameraDist);
-    topCamera = createRocketCamera(rocket.position.x, rocket.position.y, rocket.position.z - 50);
-    
-    rocketAxisHelper = new THREE.AxesHelper(10);
-    rocketAxisHelper.visible = false;
-    rocket.add(rocketAxisHelper);
+    frontCamera = createOrthographicCamera(0, 0, cameraDist, scene.position);
+    defaultCamera = createCamera(cameraDist, cameraDist, cameraDist, scene.position);
+    rocketCamera = createCamera(rocket.position.x, rocket.position.y - cameraOffset, rocket.position.z + cameraOffset, rocket.position);
 
     // Events
     window.addEventListener("keydown", onKeyDown);
@@ -487,9 +466,21 @@ function animate() {
         thetaDelta = normalized.y * translationDelta;
 
         // Move rocket
-        const newPos = toCartesianCoords(rocketSphCoords.radius, rocketSphCoords.phi + phiDelta, 
-                                                                rocketSphCoords.theta + thetaDelta);
-        moveRocket(newPos);
+        const newRocketPos = toCartesianCoords(rocketSphCoords.radius, rocketSphCoords.phi + phiDelta, 
+                                                                rocketSphCoords.theta + thetaDelta);                                                  
+        moveRocket(newRocketPos);
+
+        // Move rocket's camera
+        const oldCameraPos = toSphericalCoords(rocketCamera.position.x, rocketCamera.position.y, rocketCamera.position.z);
+        console.log(oldCameraPos);
+
+        const newCameraPos = toCartesianCoords(oldCameraPos.x, oldCameraPos.y + phiDelta, oldCameraPos.z + thetaDelta);
+        console.log(newCameraPos);
+
+        rocketCamera.position.x = newCameraPos.x;
+        rocketCamera.position.y = newCameraPos.y;
+        rocketCamera.position.z = newCameraPos.z;
+        rocketCamera.lookAt(rocket.position);
 
     }
 
