@@ -1,7 +1,7 @@
 /* global THREE */
 
 var camera, scene, renderer;
-var worldAxisHelper;
+var worldAxisHelper, rocketAxisHelper;
 const clock = new THREE.Clock();
 
 // Constants
@@ -20,8 +20,8 @@ const minSpeed = 1;
 const speedDelta = 1;
 
 // Cameras
-var defaultCamera, frontCamera, topCamera, lateralCamera;
-const cameraDist = 35;
+var defaultCamera, frontCamera, topCamera;
+const cameraDist = 45;
 const screenArea = screen.width * screen.height;
 
 // Arrays
@@ -171,9 +171,23 @@ function createCamera(x, y, z) {
     camera.position.z = z;
 
     // Point Light
-    const light = new THREE.PointLight(0xffffff, 1);
-    camera.add(light);
+    // const light = new THREE.PointLight(0xffffff, 1);
+    // camera.add(light);
 
+    camera.lookAt(scene.position);
+
+    return camera;
+}
+
+function createRocketCamera(x, y, z) {
+    'use strict';
+    camera = new THREE.PerspectiveCamera( 70,
+                                          window.innerWidth / window.innerHeight,
+                                          1,
+                                          1000 );
+
+    rocket.add(camera);
+    camera.position.z = 50;
     camera.lookAt(scene.position);
 
     return camera;
@@ -194,8 +208,8 @@ function createOrthographicCamera(x, y, z) {
     orthographicCamera.position.z = z;
 
     // Point Light
-    const light = new THREE.PointLight(0xffffff, 1);
-    camera.add(light);
+    //const light = new THREE.PointLight(0xffffff, 1);
+    //camera.add(light);
     
     orthographicCamera.lookAt(scene.position);
 
@@ -230,7 +244,6 @@ function onWindowResize() {
     resizeCamera(defaultCamera);
     resizeCamera(frontCamera);
     resizeCamera(topCamera);
-    resizeCamera(lateralCamera);
 
     renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -305,6 +318,7 @@ function createScene() {
     scene = new THREE.Scene();
 
     worldAxisHelper = new THREE.AxesHelper(10);
+    worldAxisHelper.visible = false;
     scene.add(worldAxisHelper);
 
     const light = new THREE.AmbientLight(0xFFFFFF);
@@ -320,17 +334,14 @@ function onKeyDown(e) {
     keyMap[e.keyCode] = true;
 
     switch (e.keyCode) {
-        case 48: //0
-            camera = defaultCamera;
-            break;
         case 49: //1
             camera = frontCamera;
             break;
         case 50: //2
-            camera = topCamera;
+            camera = defaultCamera;
             break;
         case 51: //3
-            camera = lateralCamera;
+            camera = topCamera;
             break; 
         case 52: //4
             for (var i = 0; i < materials.length; i++) {
@@ -340,6 +351,7 @@ function onKeyDown(e) {
         case 69:  //E
         case 101: //e
             worldAxisHelper.visible = !worldAxisHelper.visible;
+            rocketAxisHelper.visible = !rocketAxisHelper.visible;
             break;
         case 77:  //M
         case 109: //m
@@ -397,10 +409,13 @@ function init() {
     scene.add(spotLight2);
 
     // Cameras
-    defaultCamera = createCamera(cameraDist, cameraDist, cameraDist);
     frontCamera = createOrthographicCamera(0, 0, cameraDist);
-    topCamera = createOrthographicCamera(0, cameraDist, 0);
-    lateralCamera = createOrthographicCamera(cameraDist, 0, 0);
+    defaultCamera = createCamera(cameraDist, cameraDist, cameraDist);
+    topCamera = createRocketCamera(rocket.position.x, rocket.position.y, rocket.position.z - 50);
+    
+    rocketAxisHelper = new THREE.AxesHelper(10);
+    rocketAxisHelper.visible = false;
+    rocket.add(rocketAxisHelper);
 
     // Events
     window.addEventListener("keydown", onKeyDown);
