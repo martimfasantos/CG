@@ -13,7 +13,7 @@ const minSpeed = 2;
 const speedDelta = 2;
 
 // Cameras
-var defaultCamera, frontCamera, topCamera, lateralCamera;
+var defaultCamera, frontCamera, topCamera;
 const cameraDist = 45;
 const screenArea = screen.width * screen.height;
 
@@ -120,8 +120,8 @@ function createCamera(x, y, z) {
     camera.position.z = z;
 
     // Point Light
-    const light = new THREE.PointLight(0xffffff, 1);
-    camera.add(light);
+    // const light = new THREE.PointLight(0xffffff, 1);
+    // camera.add(light);
 
     camera.lookAt(scene.position);
 
@@ -143,8 +143,8 @@ function createOrthographicCamera(x, y, z) {
     orthographicCamera.position.z = z;
 
     // Point Light
-    const light = new THREE.PointLight(0xffffff, 1);
-    camera.add(light);
+    //const light = new THREE.PointLight(0xffffff, 1);
+    //camera.add(light);
     
     orthographicCamera.lookAt(scene.position);
 
@@ -179,7 +179,6 @@ function onWindowResize() {
     resizeCamera(defaultCamera);
     resizeCamera(frontCamera);
     resizeCamera(topCamera);
-    resizeCamera(lateralCamera);
 
     renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -257,17 +256,14 @@ function onKeyDown(e) {
     keyMap[e.keyCode] = true;
 
     switch (e.keyCode) {
-        case 48: //0
-            camera = defaultCamera;
-            break;
         case 49: //1
             camera = frontCamera;
             break;
         case 50: //2
-            camera = topCamera;
+            camera = defaultCamera;
             break;
         case 51: //3
-            camera = lateralCamera;
+            camera = topCamera;
             break; 
         case 52: //4
             for (var i = 0; i < materials.length; i++) {
@@ -333,10 +329,10 @@ function init() {
     scene.add(spotLight2);
 
     // Cameras
-    defaultCamera = createCamera(cameraDist, cameraDist, cameraDist);
     frontCamera = createOrthographicCamera(0, 0, cameraDist);
-    topCamera = createOrthographicCamera(0, cameraDist, 0);
-    lateralCamera = createOrthographicCamera(cameraDist, 0, 0);
+    defaultCamera = createCamera(cameraDist, cameraDist, cameraDist);
+    topCamera = createCamera(spaceship.position.x, spaceship.position.y + 50, spaceship.position.z + 50);
+    spaceship.add(topCamera);
 
     // Events
     window.addEventListener("keydown", onKeyDown);
@@ -412,6 +408,7 @@ function animate() {
     function directSpacheship(newPos) {
 
         spaceship.lookAt(0, 0, 0);
+        topCamera.lookAt(spaceship.position.x, spaceship.position.y, spaceship.position.z + 10);
 
         // Combinations 
         if (keyMap[38] == true && keyMap[39] == true) { //ArrowUp + ArrowRight
