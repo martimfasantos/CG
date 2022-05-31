@@ -4,47 +4,87 @@ var camera, scene, renderer;
 var worldAxisHelper;
 const clock = new THREE.Clock();
 
-// Translaction
-var speed = 8;
-const deltaAngle = 1/(2*Math.PI);
+// Constants
+const ROCKET = 1;
+const ARROWUP = 38;
+const ARROWDOWN = 40;
+const ARROWRIGHT = 39;
+const ARROWLEFT = 37;
 
-const maxSpeed = 20;
-const minSpeed = 2;
-const speedDelta = 2;
+// Translaction
+var speed = 4;
+const deltaAngle = 1/(3*Math.PI);
+
+const maxSpeed = 8;
+const minSpeed = 1;
+const speedDelta = 1;
 
 // Cameras
 var defaultCamera, frontCamera, topCamera, lateralCamera;
-const cameraDist = 45;
+const cameraDist = 35;
 const screenArea = screen.width * screen.height;
 
 // Arrays
 var materials = [];
 var primitives = [];
 var keyMap = [];
-var primitivesRadius = [];
+var junkSphCoords = []; // [junk1, junk2, ... , junkN]
 
 // Objects
-const R = 20;
+const R = 30;
+const H = R/11;
 const junks = 20;
 const junkMaxSize = R/20;
 const junkMinSize = R/24;
-const spaceshipHitboxRadius = R/10+R/7.5;
-var objSphCoords = []; // [spaceship, junk1, junk2, ... , junkN]
-var spaceship;
+var objHitboxRadiuses = [] // [planet, rocket, junk1, junk2, ... , junkN];
 
+var rocket;
+var rocketSphCoords = {
+    radius : null,
+    phi : null,
+    theta : null
+}
 
-function createPrimitive(x, y, z, angle_x, angle_y, angle_z, color, geometry, side, texture){
+function toCartesianCoords(radius, phi, theta) {
+
+    const sinPhiRadius = Math.sin( phi ) * radius;
+
+    const x = sinPhiRadius * Math.sin( theta );
+    const y = Math.cos( phi ) * radius;
+    const z = sinPhiRadius * Math.cos( theta );
+
+    return new THREE.Vector3(x, y, z); /* format: (x, y, z) */
+}
+
+function toSphericalCoords(x, y, z) {
+
+    const radius = Math.sqrt(x*x + y*y + z*z);
+    var phi, theta;
+
+    if (radius === 0) {
+        phi = 0; 
+        theta = 0;
+    } else {
+        phi = Math.acos( Math.max(-1, Math.min( 1, y / radius )));
+        theta = (Math.atan2( x, z ) + (2*Math.PI)) % (2*Math.PI);
+    }
+
+    return new THREE.Vector3(radius, phi, theta); /* format: (x = radius, y = phi, z = theta) */
+
+}
+
+function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side, texture){
 
     const primitive = new THREE.Object3D();
     
-    const material = new THREE.MeshPhongMaterial({ color: color, wireframe: true, side: side, map: texture});
+    const material = new THREE.MeshPhongMaterial({ color: color, wireframe: false, side: side, map: texture});
     const _geometry = geometry;
     const mesh = new THREE.Mesh(_geometry, material);
 
     primitive.position.set(x, y, z);
-    primitive.rotateX(angle_x);
-    primitive.rotateY(angle_y);
-    primitive.rotateZ(angle_z);
+    primitive.rotateX(angleX);
+    primitive.rotateY(angleY);
+    primitive.rotateZ(angleZ);
     primitive.add(mesh);
 
     materials.push(material);
@@ -62,45 +102,56 @@ function createRandomPrimitive(sphericalCoords) {
 
     // Settings
     const option = Math.random();
-    const size = junkMinSize + Math.random()*(junkMaxSize - junkMinSize);
+    const radius = 1/2 * (junkMinSize + Math.random()*(junkMaxSize - junkMinSize));
     const angle = Math.random()*360;
-    const randomColor = Math.floor(Math.random()*16777215).toString(16);
 
     var primitive;
 
-    if (option < 0.33) {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, randomColor,
-            new THREE.SphereGeometry(size, 10, 10), THREE.DoubleSide, null);
-        primitivesRadius.push(size);
-    } else if ( 0.33 < option && option < 0.66) {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, degreesToRadians(angle), 0, randomColor,
-            new THREE.BoxGeometry(size, size, size, 10, 10), THREE.DoubleSide, null);
-        primitivesRadius.push(size);
+    if (option < 0.25) {
+        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, 0x5A4D41,
+            new THREE.SphereGeometry(radius, 5, 5), THREE.DoubleSide,
+            new THREE.TextureLoader().load('../textures/rock2.jpg'));
+    } else if ( 0.25 < option && option < 0.50) {
+        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, degreesToRadians(angle), 0, 0xFFFFF,
+            new THREE.BoxGeometry(2*radius, 2*radius, 2*radius, 3, 3), THREE.DoubleSide,
+            new THREE.TextureLoader().load('../textures/metal.jpg'));
+    } else if ( 0.5 < option && option < 0.75) {
+        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, 0, 0x918E85,
+            new THREE.IcosahedronGeometry(radius, 0), THREE.DoubleSide,
+            new THREE.TextureLoader().load('../textures/rock.jpg'));
     } else {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, 0, randomColor,
-            new THREE.IcosahedronGeometry(size, 0), THREE.DoubleSide, null);
-        primitivesRadius.push(size);
+        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, 0, 0xA9A9A9,
+            new THREE.CylinderGeometry(0, radius, 2*radius, 3, 3), THREE.DoubleSide,
+            new THREE.TextureLoader().load('../textures/comet.jpg'));
     }
+
+    objHitboxRadiuses.push(radius);
 
     scene.add(primitive);
 }
 
-function createSpaceship(body, front, propellers) {
+function createRocket(body, front, propellers) {
 
-    spaceship = new THREE.Object3D();
-    spaceship.add(body);
-    spaceship.add(front);
-    spaceship.add(propellers[0]);
-    spaceship.add(propellers[1]);
-    spaceship.add(propellers[2]);
-    spaceship.add(propellers[3]);
+    rocket = new THREE.Object3D();
+    rocket.add(body);
+    rocket.add(front);
+    rocket.add(propellers[0]);
+    rocket.add(propellers[1]);
+    rocket.add(propellers[2]);
+    rocket.add(propellers[3]);
 
-    // Spaceship random start position
-    const sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
-    spaceship.position.setFromSpherical(sphericalCoords);
-    spaceship.lookAt(0, 0, 0);
+    // Rocket random start position
+    rocketSphCoords.radius = 1.2 * R;
+    rocketSphCoords.phi = Math.random() * Math.PI;
+    rocketSphCoords.theta = Math.random() * (2*Math.PI);
+
+    const initialPos = toCartesianCoords(rocketSphCoords.radius, rocketSphCoords.phi, rocketSphCoords.theta);
+    rocket.position.x = initialPos.x;
+    rocket.position.y = initialPos.y;
+    rocket.position.z = initialPos.z;
+    rocket.lookAt(0, 0, 0);
     
-    scene.add(spaceship);
+    scene.add(rocket);
 
 }
 
@@ -189,46 +240,58 @@ function createObjects() {
 
 
     // Planet
-    createPrimitive(0, 0, 0, 0, 0, 0, 0xA17D54,
-        new THREE.SphereGeometry(R, 20, 20), THREE.DoubleSide, null);
-    primitivesRadius.push(R);
+    createPrimitive(0, 0, 0, 0, 0, 0, null,
+        new THREE.SphereGeometry(R, 50, 50), THREE.DoubleSide,
+        new THREE.TextureLoader().load('../textures/planet.jpg'));
+
+    /* hitbox */
+    objHitboxRadiuses.push(R);
 
     // --------------------------------
 
-    // Spaceship
-    const radius = R/17;
-    const length = R/5;
-    const body = createPrimitive(0, 0, 0, 0, 0, 0, 0xC8BFBF,
-        new THREE.CylinderGeometry(radius, radius, length, 25), THREE.DoubleSide, null);
-    primitivesRadius.push(1.1*length/2);
-    const front = createPrimitive(0, length/2 + length/3, 0, 0, 0, 0, 0xF96262,
-        new THREE.CylinderGeometry(radius/7, radius, length/1.5, 25), THREE.DoubleSide, null);
-    primitivesRadius.push(1.1*length/3);
-    const propeller1 = createPrimitive(radius, -length/2, 0, 0, 0, 0, 0x8F8383,
-        new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
-    primitivesRadius.push(1.1*length/6); 
-    const propeller2 = createPrimitive(0, -length/2, radius, 0, 0, 0, 0x8F8383,
-        new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
-    primitivesRadius.push(1.1*length/6);
-    const propeller3 = createPrimitive(-radius, -length/2, 0, 0, 0, 0, 0x8F8383,
-        new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
-    primitivesRadius.push(1.1*length/6);
-    const propeller4 = createPrimitive(0, -length/2, -radius, 0, 0, 0, 0x8F8383,
-        new THREE.CapsuleGeometry( radius/3, length/3, 4, 8 ), THREE.DoubleSide, null);
-    primitivesRadius.push(1.1*length/6);
+    // rocket
+    const bodyLength = 5*H/8;
+    const frontLength = H/4;
+    const propellerLength = H/4; 
+    const bodyRadius = H/5;
+    const propellerRadius = bodyRadius/3.5;
+    
+    const body = createPrimitive(0, 0, 0, 0, 0, 0, null,
+        new THREE.CylinderGeometry(bodyRadius, bodyRadius, bodyLength, 25), THREE.DoubleSide,
+        new THREE.TextureLoader().load('../textures/body.jpg'));
+    const front = createPrimitive(0, bodyLength/2 + frontLength/2, 0, 0, 0, 0, null,
+        new THREE.CylinderGeometry(bodyRadius/7, bodyRadius, frontLength, 25), THREE.DoubleSide,
+        new THREE.TextureLoader().load('../textures/front.jpg'));
+    const propeller1 = createPrimitive(bodyRadius, -bodyLength/2, 0, 0, 0, 0, null,
+        new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
+        new THREE.TextureLoader().load('../textures/propeller.jpg'));
+    const propeller2 = createPrimitive(0, -bodyLength/2, bodyRadius, 0, 0, 0, null,
+        new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
+        new THREE.TextureLoader().load('../textures/propeller.jpg'));
+    const propeller3 = createPrimitive(-bodyRadius, -bodyLength/2, 0, 0, 0, 0, null,
+        new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
+        new THREE.TextureLoader().load('../textures/propeller.jpg'));
+    const propeller4 = createPrimitive(0, -bodyLength/2, -bodyRadius, 0, 0, 0, null,
+        new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
+        new THREE.TextureLoader().load('../textures/propeller.jpg'));
 
-    createSpaceship(body, front, [propeller1, propeller2, propeller3, propeller4]);
+    /* Add hitboxes */
+    objHitboxRadiuses.push(Math.max(H/2, bodyRadius + 2*propellerRadius))
+
+    createRocket(body, front, [propeller1, propeller2, propeller3, propeller4]);
 
     // --------------------------------
+
 
     // Space junk
     for (var i = 0; i < junks; i++) {
         var sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
 
-        while (objSphCoords.includes(sphericalCoords)){
+        while (junkSphCoords.includes(sphericalCoords)){
             sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
         }
         
+        junkSphCoords.push(sphericalCoords);
         createRandomPrimitive(sphericalCoords);
     }
 
@@ -314,6 +377,7 @@ function init() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
 
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
     document.body.appendChild(renderer.domElement);
     
@@ -345,17 +409,21 @@ function init() {
 
 }
 
-function checkcollision() {
+function checkCollision() {
 
-    var worldPosition1 = new THREE.Vector3();
-    var worldPosition2 = new THREE.Vector3();
+    const junkList = primitives.slice(7, primitives.length);
+    var junkPos = new THREE.Vector3();
 
-    primitives[1].getWorldPosition(worldPosition1);
-    for (var i = 7; i<primitives.length; i++) {
-        primitives[i].getWorldPosition(worldPosition2);
-        var distance = worldPosition1.distanceTo(worldPosition2);
-        if (distance <= spaceshipHitboxRadius + primitivesRadius[i]) {
-            primitives[i].visible = false;
+    // TODO VER APENAS NO SEMI HEMISFERIO -> VER COORDENADAS!
+    for (var junk = 0; junk < junkList.length; junk++) {
+        // Get junk position
+        junkList[junk].getWorldPosition(junkPos);
+
+        // Get rocket's position and compare to junk
+        const distance = rocket.position.distanceTo(junkPos);
+
+        if (distance <= objHitboxRadiuses[ROCKET] + objHitboxRadiuses[junk+2]) {
+            junkList[junk].visible = false;
         }
     }
 
@@ -366,93 +434,114 @@ function animate() {
     
     var clockDelta = clock.getDelta();
     const translationDelta = deltaAngle * speed * clockDelta;
+    var phiDelta = 0, thetaDelta = 0;
 
-    checkcollision();
+    checkCollision();
 
     // Translation
-    if (keyMap[38] == true) { //ArrowUp
-        const oldPos = new THREE.Spherical().setFromVector3(spaceship.position);
-        var newPos;
-        if (oldPos.theta < 0) {
-            newPos = new THREE.Spherical(oldPos.radius, oldPos.phi + translationDelta, oldPos.theta);
+    if (keyMap[ARROWUP] == true) { //ArrowUp
+        if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2) { 
+            phiDelta += translationDelta;
         } else { 
-            newPos = new THREE.Spherical(oldPos.radius, oldPos.phi - translationDelta, oldPos.theta);
+            phiDelta -= translationDelta;
         }
-        directSpacheship(newPos);
-        spaceship.position.setFromSpherical(newPos);
     }   
 
-    if (keyMap[40] == true) { //ArrowDown
-        const oldPos = new THREE.Spherical().setFromVector3(spaceship.position);
-        var newPos;
-        if (oldPos.theta < 0) { 
-            newPos = new THREE.Spherical(oldPos.radius, oldPos.phi - translationDelta, oldPos.theta);
+    if (keyMap[ARROWDOWN] == true) { //ArrowDown
+        if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2) { 
+            phiDelta -= translationDelta;
         } else { 
-            newPos = new THREE.Spherical(oldPos.radius, oldPos.phi + translationDelta, oldPos.theta);
+            phiDelta += translationDelta;
         }
-        directSpacheship(newPos);
-        spaceship.position.setFromSpherical(newPos);
     } 
 
-    if (keyMap[39] == true) { //ArrowRight
-        const oldPos = new THREE.Spherical().setFromVector3(spaceship.position);
-        const newPos = new THREE.Spherical(oldPos.radius, oldPos.phi, oldPos.theta + translationDelta);
-        directSpacheship(newPos);
-        spaceship.position.setFromSpherical(newPos);
+    if (keyMap[ARROWRIGHT] == true) { //ArrowRight
+        thetaDelta += translationDelta;
     }
 
-    if (keyMap[37] == true) { //ArrowLeft
-        const oldPos = new THREE.Spherical().setFromVector3(spaceship.position);
-        const newPos = new THREE.Spherical(oldPos.radius, oldPos.phi, oldPos.theta - translationDelta);
-        directSpacheship(newPos);
-        spaceship.position.setFromSpherical(newPos);
+    if (keyMap[ARROWLEFT] == true) { //ArrowLeft
+        thetaDelta -= translationDelta;
+        
     }
 
-    // Aux function
-    function directSpacheship(newPos) {
+    /* Detects if there is movement */
+    if ( phiDelta != 0 || thetaDelta != 0 ){
+        // Normalize movement
+        const normalized = new THREE.Vector2(phiDelta, thetaDelta).normalize();
+        phiDelta = normalized.x * translationDelta;
+        thetaDelta = normalized.y * translationDelta;
 
-        spaceship.lookAt(0, 0, 0);
-
-        // Combinations 
-        if (keyMap[38] == true && keyMap[39] == true) { //ArrowUp + ArrowRight
-            if (newPos.theta < 0)
-                spaceship.rotateX(Math.PI);
-            spaceship.rotateZ(Math.PI/4);
-
-        } else if (keyMap[38] == true && keyMap[37] == true) { //ArrowUp + ArrowLeft
-            if (newPos.theta < 0)
-                spaceship.rotateX(Math.PI);
-            spaceship.rotateZ(-Math.PI/4);
-
-        } else if (keyMap[40] == true && keyMap[39] == true) { //ArrowDown + ArrowRight
-            if (newPos.theta > 0)
-                spaceship.rotateX(-Math.PI);
-            spaceship.rotateZ(Math.PI/4);
-
-        } else if (keyMap[40] == true && keyMap[37] == true) { //ArrowDown + ArrowLeft
-            if (newPos.theta > 0)
-                spaceship.rotateX(-Math.PI);
-            spaceship.rotateZ(-Math.PI/4);
-        }
-
-        else if (keyMap[38] == true) { //ArrowUp
-            if (newPos.theta < 0)
-                spaceship.rotateX(Math.PI);           
-
-        } else if (keyMap[40] == true) { //ArrowDown
-            if (newPos.theta > 0)
-                spaceship.rotateX(Math.PI);
-
-        } else if (keyMap[39] == true) { //ArrowRight
-            spaceship.rotateZ(Math.PI/2);
-
-        } else if (keyMap[37] == true) { //ArrowLeft
-            spaceship.rotateZ(-Math.PI/2);
-        }
+        // Move rocket
+        const newPos = toCartesianCoords(rocketSphCoords.radius, rocketSphCoords.phi + phiDelta, 
+                                                                rocketSphCoords.theta + thetaDelta);
+        moveRocket(newPos);
 
     }
 
     render();
 
     requestAnimationFrame(animate);
+
+    // Auxiliar functions
+    function moveRocket(newPos) {
+
+        rocket.position.x = newPos.x;
+        rocket.position.y = newPos.y;
+        rocket.position.z = newPos.z;
+
+        // New rocketSphCoords
+        const newCoords = toSphericalCoords(newPos.x, newPos.y, newPos.z);
+        rocketSphCoords.phi = newCoords.y;
+        rocketSphCoords.theta = newCoords.z;
+
+        directRocket();
+
+    }
+
+    // Aux function
+    function directRocket() {
+
+        rocket.lookAt(0, 0, 0);
+
+        // Combinations 
+        if (keyMap[ARROWUP] == true && keyMap[ARROWRIGHT] == true 
+        && keyMap[ARROWDOWN] == false && keyMap[ARROWLEFT] == false ) {     //ArrowUp + ArrowRight
+            if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2)
+                rocket.rotateZ(Math.PI);
+            rocket.rotateZ(Math.PI/4);
+
+        } else if (keyMap[ARROWUP] == true && keyMap[ARROWLEFT] == true 
+        && keyMap[ARROWDOWN] == false && keyMap[ARROWRIGHT] == false ) {   //ArrowUp + ArrowLeft
+            if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2)
+                rocket.rotateZ(Math.PI);
+            rocket.rotateZ(-Math.PI/4);
+
+        } else if (keyMap[ARROWDOWN] == true && keyMap[ARROWRIGHT] == true 
+        && keyMap[ARROWUP] == false && keyMap[ARROWLEFT] == false ) {       //ArrowDown + ArrowRight
+            if (rocketSphCoords.theta < Math.PI/2 || rocketSphCoords.theta > 3*Math.PI/2)
+                rocket.rotateZ(Math.PI);
+            rocket.rotateZ(-Math.PI/4);
+
+        } else if (keyMap[ARROWDOWN] == true && keyMap[ARROWLEFT] == true 
+        && keyMap[ARROWUP] == false && keyMap[ARROWRIGHT] == false ) {     //ArrowDown + ArrowLeft
+            if (rocketSphCoords.theta < Math.PI/2 || rocketSphCoords.theta > 3*Math.PI/2)
+                rocket.rotateZ(Math.PI);
+            rocket.rotateZ(Math.PI/4);
+        
+        } else if (keyMap[ARROWUP] == true) { //ArrowUp
+            if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2)
+                rocket.rotateZ(Math.PI);           
+
+        } else if (keyMap[ARROWDOWN] == true) { //ArrowDown
+            if (rocketSphCoords.theta < Math.PI/2 || rocketSphCoords.theta > 3*Math.PI/2)
+                rocket.rotateZ(Math.PI);
+
+        } else if (keyMap[ARROWRIGHT] == true) { //ArrowRight
+            rocket.rotateZ(Math.PI/2);
+
+        } else if (keyMap[ARROWLEFT] == true) { //ArrowLeft
+            rocket.rotateZ(-Math.PI/2);
+        }
+
+    }
 }
