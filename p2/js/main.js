@@ -153,6 +153,23 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
 
 }
 
+function chooseQuadrant(theta) {
+
+    if (theta >= 0 && theta < Math.PI/2){
+        return 0;
+    }
+    else if (theta >= Math.PI/2 && theta < Math.PI){
+        return 1;
+    }
+    else if (theta >= Math.PI && theta < 3*Math.PI/2){
+        return 2;
+    }
+    else {
+        return 3;
+    }
+
+}
+
 function createRandomPrimitive(sphericalCoords) {
 
     // Position
@@ -481,6 +498,7 @@ function checkCollision() {
         if (distance <= rocketHitboxRadius + junkHitboxRadiuses[quadrant][junk]) {
             scene.remove(junkList[junk]);
         }
+
     }
 
 }
