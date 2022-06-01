@@ -5,7 +5,6 @@ var worldAxisHelper, rocketAxisHelper;
 const clock = new THREE.Clock();
 
 // Constants
-const ROCKET = 1;
 const ARROWUP = 38;
 const ARROWDOWN = 40;
 const ARROWRIGHT = 39;
@@ -31,6 +30,7 @@ var materials = [];
 var primitives = []; // [earth, clouds, rocket1, ... , rocket6, junk1, junk2, ... , junkN];
 var keyPressed = [];
 var junkSphCoords = []; // [junk1, junk2, ... , junkN]
+var junkPrimitivesPerQuadrant = [[], [], [], []]; // junk primitives divided by quadrants
 
 // Objects
 const R = 30;
@@ -38,7 +38,6 @@ const H = R/11;
 const junks = 20;
 const junkMaxSize = R/20;
 const junkMinSize = R/24;
-var objHitboxRadiuses = [] // [planet, rocket, junk1, junk2, ... , junkN];
 
 var rocket;
 var rocketSphCoords = {
@@ -46,6 +45,10 @@ var rocketSphCoords = {
     phi : null,
     theta : null
 }
+
+// Hitboxes
+var rocketHitboxRadius;
+var junkHitboxRadiuses = [[], [], [], []];
 
 function toCartesianCoords(radius, phi, theta) {
 
@@ -72,6 +75,15 @@ function toSphericalCoords(x, y, z) {
     }
 
     return new THREE.Vector3(radius, phi, theta); /* format: (x = radius, y = phi, z = theta) */
+
+}
+
+function chooseQuadrant(theta) {
+
+    if (theta >= 0 && theta < Math.PI/2) return 0; // 1st quadrant
+    else if (theta >= Math.PI/2 && theta < Math.PI) return 1; // 2nd quadrant
+    else if (theta >= Math.PI && theta < 3*Math.PI/2) return 2; // 3rd quadrant
+    else return 3; // 4th quadrant
 
 }
 
@@ -172,7 +184,11 @@ function createRandomPrimitive(sphericalCoords) {
             textureLoader.load('../textures/comet.jpg'));
     }
 
-    objHitboxRadiuses.push(radius);
+    const theta = sphericalCoords.z;
+    const quadrant = chooseQuadrant(theta);
+
+    junkPrimitivesPerQuadrant[quadrant].push(primitive);
+    junkHitboxRadiuses[quadrant].push(radius);
 
     scene.add(primitive);
 }
@@ -189,8 +205,8 @@ function createRocket(body, front, propellers) {
 
     // Rocket random start position
     rocketSphCoords.radius = 1.2*R;
-    rocketSphCoords.phi = Math.PI/2;
-    rocketSphCoords.theta = 0;
+    rocketSphCoords.phi = Math.random() * Math.PI;
+    rocketSphCoords.theta = Math.random() * (2*Math.PI);
 
     const initialPos = toCartesianCoords(rocketSphCoords.radius, rocketSphCoords.phi, rocketSphCoords.theta);
     rocket.position.x = initialPos.x;
@@ -232,42 +248,42 @@ function createCamera(x, y, z) {
 function createOrthographicCamera(x, y, z) {
     'use strict';
 
-    var orthographicCamera = new THREE.OrthographicCamera( window.innerWidth / - 30,
-                                                       window.innerWidth / 30,
-                                                       window.innerHeight / 30, 
-                                                       window.innerHeight / -30, 
+    var orthoCamera = new THREE.OrthographicCamera( window.innerWidth / - 20,
+                                                       window.innerWidth / 20,
+                                                       window.innerHeight / 20, 
+                                                       window.innerHeight / -20, 
                                                        1, 
                                                        1000 );
     // Position
-    orthographicCamera.position.x = x;
-    orthographicCamera.position.y = y;
-    orthographicCamera.position.z = z;
+    orthoCamera.position.x = x;
+    orthoCamera.position.y = y;
+    orthoCamera.position.z = z;
     
-    orthographicCamera.lookAt(scene.position);
+    orthoCamera.lookAt(scene.position);
 
-    cameras.push(camera);
+    cameras.push(orthoCamera);
 
-    return orthographicCamera;
+    return orthoCamera;
     
 }
 
-function resizeCamera(camera){
-    'use strict';
+function resizeCameras(){
 
-    cameras.forEach(camera => {
+    cameras.forEach((camera) => {
 
-        if (camera.isOrthographicCamera){
-
-            camera.left = window.innerWidth / - 30;
-            camera.right = window.innerWidth / 30;
-            camera.top = window.innerHeight / 30;
-            camera.bottom = window.innerHeight  / - 30;
-    
-        } else {
+        if (camera.isPerspectiveCamera){
             camera.aspect = window.innerWidth / window.innerHeight;
-        } 
+        
+        } else if (camera.isOrthographicCamera){
+
+            camera.left = window.innerWidth / - 20;
+            camera.right = window.innerWidth / 20;
+            camera.top = window.innerHeight / 20;
+            camera.bottom = window.innerHeight  / - 20;
+        }
 
         camera.updateProjectionMatrix();
+
     });
 
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -276,12 +292,7 @@ function resizeCamera(camera){
 
 function onWindowResize() {
     'use strict';
-    
-    resizeCamera(orthographicCamera);
-    resizeCamera(perspectiveCamera);
-    resizeCamera(rocketCamera);
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    resizeCameras();
 
 }
 
@@ -291,9 +302,6 @@ function createObjects() {
 
     // Planet
     createPlanet(0, 0, 0);
-
-    /* hitbox */
-    objHitboxRadiuses.push(R);
 
     // --------------------------------
 
@@ -324,7 +332,7 @@ function createObjects() {
         textureLoader.load('../textures/propeller.jpg'));
 
     /* Add hitboxes */
-    objHitboxRadiuses.push(Math.max(H/2, bodyRadius + 2*propellerRadius))
+    rocketHitboxRadius = Math.max(H/2, bodyRadius + 2*propellerRadius);
 
     createRocket(body, front, [propeller1, propeller2, propeller3, propeller4]);
 
@@ -345,6 +353,7 @@ function createObjects() {
         }
         
         junkSphCoords.push(sphericalCoords);
+
         createRandomPrimitive(sphericalCoords);
     }
 
@@ -441,7 +450,10 @@ function init() {
 
     // Cameras
     orthographicCamera = createOrthographicCamera(0, 0, cameraDist);
+    scene.add(orthographicCamera);
+
     perspectiveCamera = createCamera(cameraDist, cameraDist, cameraDist);
+    scene.add(perspectiveCamera);
 
     rocketCamera = createCamera(0, -cameraOffset, -cameraOffset/3);
     rocket.add(rocketCamera);
@@ -455,10 +467,10 @@ function init() {
 
 function checkCollision() {
 
-    const junkList = primitives.slice(8, primitives.length);
+    const quadrant = chooseQuadrant(rocketSphCoords.theta);
+    const junkList = junkPrimitivesPerQuadrant[quadrant];
     var junkPos = new THREE.Vector3();
 
-    // TODO VER APENAS NO SEMI HEMISFERIO -> VER COORDENADAS!
     for (var junk = 0; junk < junkList.length; junk++) {
         // Get junk position
         junkList[junk].getWorldPosition(junkPos);
@@ -466,12 +478,13 @@ function checkCollision() {
         // Get rocket's position and compare to junk
         const distance = rocket.position.distanceTo(junkPos);
 
-        if (distance <= objHitboxRadiuses[ROCKET] + objHitboxRadiuses[junk+2]) {
+        if (distance <= rocketHitboxRadius + junkHitboxRadiuses[quadrant][junk]) {
             scene.remove(junkList[junk]);
         }
     }
 
 }
+
 
 function animate() {
     'use strict';
