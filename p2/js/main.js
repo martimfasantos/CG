@@ -30,6 +30,8 @@ var materials = [];
 var primitives = [];
 var keyMap = [];
 var junkSphCoords = []; // [junk1, junk2, ... , junkN]
+var junkPos = [];
+var junkPrimitives = [[], [], [], []]; // junk primitives divided by quadrants
 
 // Objects
 const R = 30;
@@ -37,7 +39,8 @@ const H = R/11;
 const junks = 20;
 const junkMaxSize = R/20;
 const junkMinSize = R/24;
-var objHitboxRadiuses = [] // [planet, rocket, junk1, junk2, ... , junkN];
+var objHitboxRadiuses = []; // [planet, rocket];
+var junkHitboxRadiuses = [[], [], [], []]
 
 var rocket;
 var rocketSphCoords = {
@@ -96,6 +99,23 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
 
 }
 
+function chooseQuadrant(theta) {
+
+    if (theta >= 0 && theta < Math.PI/2){
+        return 0;
+    }
+    else if (theta >= Math.PI/2 && theta < Math.PI){
+        return 1;
+    }
+    else if (theta >= Math.PI && theta < 3*Math.PI/2){
+        return 2;
+    }
+    else {
+        return 3;
+    }
+
+}
+
 function createRandomPrimitive(sphericalCoords) {
 
     // Position
@@ -126,7 +146,11 @@ function createRandomPrimitive(sphericalCoords) {
             new THREE.TextureLoader().load('../textures/comet.jpg'));
     }
 
-    objHitboxRadiuses.push(radius);
+    var theta = sphericalCoords.theta;
+
+    junkHitboxRadiuses[chooseQuadrant(theta)].push(radius);
+
+    junkPrimitives[chooseQuadrant(theta)].push(primitive);
 
     scene.add(primitive);
 }
@@ -281,10 +305,13 @@ function createObjects() {
 
     // Space junk
     for (var i = 0; i < junks; i++) {
-        var sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
+
+        const theta = Math.random() * (2*Math.PI);
+
+        var sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, theta);
 
         while (junkSphCoords.includes(sphericalCoords)){
-            sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
+            sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, theta);
         }
         
         junkSphCoords.push(sphericalCoords);
@@ -405,20 +432,22 @@ function init() {
 
 function checkCollision() {
 
-    const junkList = primitives.slice(7, primitives.length);
     var junkPos = new THREE.Vector3();
 
+    var numberOfArray = chooseQuadrant(rocketSphCoords.theta);
+
     // TODO VER APENAS NO SEMI HEMISFERIO -> VER COORDENADAS!
-    for (var junk = 0; junk < junkList.length; junk++) {
+    for (var junk = 0; junk < junkHitboxRadiuses[numberOfArray].length; junk++) {
         // Get junk position
-        junkList[junk].getWorldPosition(junkPos);
+        junkPrimitives[numberOfArray][junk].getWorldPosition(junkPos);
 
         // Get rocket's position and compare to junk
         const distance = rocket.position.distanceTo(junkPos);
 
-        if (distance <= objHitboxRadiuses[ROCKET] + objHitboxRadiuses[junk+2]) {
-            junkList[junk].visible = false;
+        if (distance <= objHitboxRadiuses[ROCKET] + junkHitboxRadiuses[numberOfArray][junk]) {
+            scene.remove(junkPrimitives[numberOfArray][junk]);
         }
+
     }
 
 }
@@ -472,10 +501,10 @@ function animate() {
 
         // Move rocket's camera
         const oldCameraPos = toSphericalCoords(rocketCamera.position.x, rocketCamera.position.y, rocketCamera.position.z);
-        console.log(oldCameraPos);
+        //console.log(oldCameraPos);
 
         const newCameraPos = toCartesianCoords(oldCameraPos.x, oldCameraPos.y + phiDelta, oldCameraPos.z + thetaDelta);
-        console.log(newCameraPos);
+        //console.log(newCameraPos);
 
         rocketCamera.position.x = newCameraPos.x;
         rocketCamera.position.y = newCameraPos.y;
