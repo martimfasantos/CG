@@ -20,15 +20,16 @@ const minSpeed = 1;
 const speedDelta = 1;
 
 // Cameras
-var defaultCamera, frontCamera, rocketCamera;
-const cameraDist = 50;
+var orthographicCamera, perspectiveCamera, rocketCamera;
+const cameraDist = 35;
 const cameraOffset = 10;
 const screenArea = screen.width * screen.height;
 
 // Arrays
+var cameras = [];
 var materials = [];
-var primitives = [];
-var keyMap = [];
+var primitives = []; // [earth, clouds, rocket1, ... , rocket6, junk1, junk2, ... , junkN];
+var keyPressed = [];
 var junkSphCoords = []; // [junk1, junk2, ... , junkN]
 
 // Objects
@@ -74,6 +75,50 @@ function toSphericalCoords(x, y, z) {
 
 }
 
+function createPlanet(x, y, z){
+
+    const textureLoader = new THREE.TextureLoader();
+    
+    // Earth
+    const earth = new THREE.Object3D();
+
+    const earthGeometry = new THREE.SphereGeometry(R, 50, 50);
+    const earthMaterial = new THREE.MeshPhongMaterial({
+        map: textureLoader.load('../textures/earth.jpg'),
+        specularMap: textureLoader.load('../textures/earth_specular_map.tif')
+    });
+
+    const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+    earth.position.set(x, y, z);
+    earth.add(earthMesh);
+
+    materials.push(earthMaterial);
+    primitives.push(earth);
+    
+    scene.add(earthMesh);
+
+    // Clouds
+    const clouds = new THREE.Object3D();
+
+    const cloudGeometry = new THREE.SphereGeometry(1.02*R, 32, 32);
+    const cloudMaterial = new THREE.MeshPhongMaterial({
+        map: textureLoader.load('../textures/earth_clouds.png'),
+        transparent: true
+    });
+
+    const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
+    clouds.position.set(x, y, z);
+    clouds.add(cloudMesh);
+
+    materials.push(cloudMaterial);
+    primitives.push(clouds);
+    
+    scene.add(cloudMesh);
+
+    return earth;
+
+}
+
 function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side, texture){
 
     const primitive = new THREE.Object3D();
@@ -99,7 +144,7 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
 function createRandomPrimitive(sphericalCoords) {
 
     // Position
-    const pos = new THREE.Vector3().setFromSpherical(sphericalCoords);
+    const pos = toCartesianCoords(sphericalCoords.x, sphericalCoords.y, sphericalCoords.z);
 
     // Settings
     const option = Math.random();
@@ -107,23 +152,24 @@ function createRandomPrimitive(sphericalCoords) {
     const angle = Math.random()*360;
 
     var primitive;
+    const textureLoader = new THREE.TextureLoader();
 
     if (option < 0.25) {
         primitive = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, 0x5A4D41,
             new THREE.SphereGeometry(radius, 5, 5), THREE.DoubleSide,
-            new THREE.TextureLoader().load('../textures/rock2.jpg'));
+            textureLoader.load('../textures/rock2.jpg'));
     } else if ( 0.25 < option && option < 0.50) {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, degreesToRadians(angle), 0, 0xFFFFF,
+        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, degreesToRadians(angle), 0, 0xFFFFFF,
             new THREE.BoxGeometry(2*radius, 2*radius, 2*radius, 3, 3), THREE.DoubleSide,
-            new THREE.TextureLoader().load('../textures/metal.jpg'));
+            textureLoader.load('../textures/metal.jpg'));
     } else if ( 0.5 < option && option < 0.75) {
         primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, 0, 0x918E85,
             new THREE.IcosahedronGeometry(radius, 0), THREE.DoubleSide,
-            new THREE.TextureLoader().load('../textures/rock.jpg'));
+            textureLoader.load('../textures/rock.jpg'));
     } else {
         primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, 0, 0xA9A9A9,
             new THREE.CylinderGeometry(0, radius, 2*radius, 3, 3), THREE.DoubleSide,
-            new THREE.TextureLoader().load('../textures/comet.jpg'));
+            textureLoader.load('../textures/comet.jpg'));
     }
 
     objHitboxRadiuses.push(radius);
@@ -152,6 +198,7 @@ function createRocket(body, front, propellers) {
     rocket.position.z = initialPos.z;
     rocket.lookAt(0, 0, 0);
 
+    // Rocket axis helper
     rocketAxisHelper = new THREE.AxesHelper(10);
     rocketAxisHelper.visible = false;
     rocket.add(rocketAxisHelper);
@@ -164,7 +211,7 @@ function degreesToRadians(degrees){
   return degrees * (Math.PI/180);
 }
 
-function createCamera(x, y, z, lookAt) {
+function createCamera(x, y, z) {
     'use strict';
     camera = new THREE.PerspectiveCamera( 70,
                                           window.innerWidth / window.innerHeight,
@@ -175,18 +222,20 @@ function createCamera(x, y, z, lookAt) {
     camera.position.y = y;
     camera.position.z = z;
 
-    camera.lookAt(lookAt);
+    camera.lookAt(scene.position);
+
+    cameras.push(camera);
 
     return camera;
 }
 
-function createOrthographicCamera(x, y, z, lookAt) {
+function createOrthographicCamera(x, y, z) {
     'use strict';
 
-    var orthographicCamera = new THREE.OrthographicCamera( window.innerWidth / - 20,
-                                                       window.innerWidth / 20,
-                                                       window.innerHeight / 20, 
-                                                       window.innerHeight / -20, 
+    var orthographicCamera = new THREE.OrthographicCamera( window.innerWidth / - 30,
+                                                       window.innerWidth / 30,
+                                                       window.innerHeight / 30, 
+                                                       window.innerHeight / -30, 
                                                        1, 
                                                        1000 );
     // Position
@@ -194,7 +243,9 @@ function createOrthographicCamera(x, y, z, lookAt) {
     orthographicCamera.position.y = y;
     orthographicCamera.position.z = z;
     
-    orthographicCamera.lookAt(lookAt);
+    orthographicCamera.lookAt(scene.position);
+
+    cameras.push(camera);
 
     return orthographicCamera;
     
@@ -203,29 +254,31 @@ function createOrthographicCamera(x, y, z, lookAt) {
 function resizeCamera(camera){
     'use strict';
 
-    if (camera instanceof THREE.OrthographicCamera){
+    cameras.forEach(camera => {
 
-        const windowArea = window.innerWidth * window.innerHeight;
-        camera.left = window.innerWidth / - 20;
-        camera.right = window.innerWidth / 20;
-        camera.top = window.innerHeight / 20;
-        camera.bottom = window.innerHeight  / - 20;
+        if (camera.isOrthographicCamera){
 
-        camera.zoom = windowArea / screenArea;
+            camera.left = window.innerWidth / - 30;
+            camera.right = window.innerWidth / 30;
+            camera.top = window.innerHeight / 30;
+            camera.bottom = window.innerHeight  / - 30;
+    
+        } else {
+            camera.aspect = window.innerWidth / window.innerHeight;
+        } 
 
-    } else {
-        camera.aspect = window.innerWidth / window.innerHeight;
-    } 
-            
-    camera.updateProjectionMatrix();
+        camera.updateProjectionMatrix();
+    });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
 
 function onWindowResize() {
     'use strict';
     
-    resizeCamera(defaultCamera);
-    resizeCamera(frontCamera);
+    resizeCamera(orthographicCamera);
+    resizeCamera(perspectiveCamera);
     resizeCamera(rocketCamera);
 
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -234,18 +287,17 @@ function onWindowResize() {
 
 function createObjects() {
 
+    const textureLoader = new THREE.TextureLoader();
 
     // Planet
-    createPrimitive(0, 0, 0, 0, 0, 0, null,
-        new THREE.SphereGeometry(R, 50, 50), THREE.DoubleSide,
-        new THREE.TextureLoader().load('../textures/planet.jpg'));
+    createPlanet(0, 0, 0);
 
     /* hitbox */
     objHitboxRadiuses.push(R);
 
     // --------------------------------
 
-    // rocket
+    // Rocket
     const bodyLength = 5*H/8;
     const frontLength = H/4;
     const propellerLength = H/4; 
@@ -254,22 +306,22 @@ function createObjects() {
     
     const body = createPrimitive(0, 0, 0, 0, 0, 0, null,
         new THREE.CylinderGeometry(bodyRadius, bodyRadius, bodyLength, 25), THREE.DoubleSide,
-        new THREE.TextureLoader().load('../textures/body.jpg'));
+        textureLoader.load('../textures/body.jpg'));
     const front = createPrimitive(0, bodyLength/2 + frontLength/2, 0, 0, 0, 0, null,
         new THREE.CylinderGeometry(bodyRadius/7, bodyRadius, frontLength, 25), THREE.DoubleSide,
-        new THREE.TextureLoader().load('../textures/front.jpg'));
+        textureLoader.load('../textures/front.jpg'));
     const propeller1 = createPrimitive(bodyRadius, -bodyLength/2, 0, 0, 0, 0, null,
         new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
-        new THREE.TextureLoader().load('../textures/propeller.jpg'));
+        textureLoader.load('../textures/propeller.jpg'));
     const propeller2 = createPrimitive(0, -bodyLength/2, bodyRadius, 0, 0, 0, null,
         new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
-        new THREE.TextureLoader().load('../textures/propeller.jpg'));
+        textureLoader.load('../textures/propeller.jpg'));
     const propeller3 = createPrimitive(-bodyRadius, -bodyLength/2, 0, 0, 0, 0, null,
         new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
-        new THREE.TextureLoader().load('../textures/propeller.jpg'));
+        textureLoader.load('../textures/propeller.jpg'));
     const propeller4 = createPrimitive(0, -bodyLength/2, -bodyRadius, 0, 0, 0, null,
         new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
-        new THREE.TextureLoader().load('../textures/propeller.jpg'));
+        textureLoader.load('../textures/propeller.jpg'));
 
     /* Add hitboxes */
     objHitboxRadiuses.push(Math.max(H/2, bodyRadius + 2*propellerRadius))
@@ -281,10 +333,15 @@ function createObjects() {
 
     // Space junk
     for (var i = 0; i < junks; i++) {
-        var sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
+        // Spaceship random start position
+        var phi = Math.random() * Math.PI;
+        var theta = Math.random() * (2*Math.PI);
+        var sphericalCoords = new THREE.Vector3(1.2 * R, phi, theta);
 
         while (junkSphCoords.includes(sphericalCoords)){
-            sphericalCoords = new THREE.Spherical(1.2 * R, Math.random() * Math.PI, Math.random() * (2*Math.PI));
+            var phi = Math.random() * Math.PI;
+            var theta = Math.random() * (2*Math.PI);
+            var sphericalCoords = new THREE.Vector3(1.2 * R, phi, theta);
         }
         
         junkSphCoords.push(sphericalCoords);
@@ -304,9 +361,6 @@ function createScene() {
     worldAxisHelper.visible = false;
     scene.add(worldAxisHelper);
 
-    const light = new THREE.AmbientLight(0xFFFFFF);
-    scene.add(light);
-
     createObjects();
 
 }
@@ -314,14 +368,14 @@ function createScene() {
 function onKeyDown(e) {
     'use strict';
 
-    keyMap[e.keyCode] = true;
+    keyPressed[e.keyCode] = true;
 
     switch (e.keyCode) {
         case 49: //1
-            camera = frontCamera;
+            camera = orthographicCamera;
             break;
         case 50: //2
-            camera = defaultCamera;
+            camera = perspectiveCamera;
             break;
         case 51: //3
             camera = rocketCamera;
@@ -358,7 +412,7 @@ function onKeyDown(e) {
 function onKeyUp(e) {
     'use strict';
 
-    keyMap[e.keyCode] = false;
+    keyPressed[e.keyCode] = false;
 }
 
 function render() {
@@ -379,22 +433,18 @@ function init() {
     createScene();
     
     // Spotlights for the shadows
-    var spotLight1 = new THREE.SpotLight(0xffffff);
-    spotLight1.position.set(0, 30, 60);
-    spotLight1.castShadow = true;
-    spotLight1.intensity = 0.5;
-    scene.add(spotLight1);
+    const light1 = new THREE.DirectionalLight(0x404040, 6);
+    scene.add(light1);
 
-    var spotLight2 = new THREE.SpotLight(0xffffff);
-    spotLight2.position.set(30, -60, 0);
-    spotLight2.castShadow = true;
-    spotLight2.intensity = 0.5;
-    scene.add(spotLight2);
+    const light2 = new THREE.AmbientLight(0xF7F7F7, 1);
+    scene.add(light2);
 
     // Cameras
-    frontCamera = createOrthographicCamera(0, 0, cameraDist, scene.position);
-    defaultCamera = createCamera(cameraDist, cameraDist, cameraDist, scene.position);
-    rocketCamera = createCamera(rocket.position.x, rocket.position.y - cameraOffset, rocket.position.z + cameraOffset, rocket.position);
+    orthographicCamera = createOrthographicCamera(0, 0, cameraDist);
+    perspectiveCamera = createCamera(cameraDist, cameraDist, cameraDist);
+
+    rocketCamera = createCamera(0, -cameraOffset, -cameraOffset/3);
+    rocket.add(rocketCamera);
 
     // Events
     window.addEventListener("keydown", onKeyDown);
@@ -405,7 +455,7 @@ function init() {
 
 function checkCollision() {
 
-    const junkList = primitives.slice(7, primitives.length);
+    const junkList = primitives.slice(8, primitives.length);
     var junkPos = new THREE.Vector3();
 
     // TODO VER APENAS NO SEMI HEMISFERIO -> VER COORDENADAS!
@@ -417,7 +467,7 @@ function checkCollision() {
         const distance = rocket.position.distanceTo(junkPos);
 
         if (distance <= objHitboxRadiuses[ROCKET] + objHitboxRadiuses[junk+2]) {
-            junkList[junk].visible = false;
+            scene.remove(junkList[junk]);
         }
     }
 
@@ -433,7 +483,7 @@ function animate() {
     checkCollision();
 
     // Translation
-    if (keyMap[ARROWUP] == true) { //ArrowUp
+    if (keyPressed[ARROWUP]) { //ArrowUp
         if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2) { 
             phiDelta += translationDelta;
         } else { 
@@ -441,7 +491,7 @@ function animate() {
         }
     }   
 
-    if (keyMap[ARROWDOWN] == true) { //ArrowDown
+    if (keyPressed[ARROWDOWN]) { //ArrowDown
         if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2) { 
             phiDelta -= translationDelta;
         } else { 
@@ -449,17 +499,18 @@ function animate() {
         }
     } 
 
-    if (keyMap[ARROWRIGHT] == true) { //ArrowRight
+    if (keyPressed[ARROWRIGHT]) { //ArrowRight
         thetaDelta += translationDelta;
     }
 
-    if (keyMap[ARROWLEFT] == true) { //ArrowLeft
+    if (keyPressed[ARROWLEFT]) { //ArrowLeft
         thetaDelta -= translationDelta;
         
     }
 
     /* Detects if there is movement */
     if ( phiDelta != 0 || thetaDelta != 0 ){
+
         // Normalize movement
         const normalized = new THREE.Vector2(phiDelta, thetaDelta).normalize();
         phiDelta = normalized.x * translationDelta;
@@ -469,18 +520,6 @@ function animate() {
         const newRocketPos = toCartesianCoords(rocketSphCoords.radius, rocketSphCoords.phi + phiDelta, 
                                                                 rocketSphCoords.theta + thetaDelta);                                                  
         moveRocket(newRocketPos);
-
-        // Move rocket's camera
-        const oldCameraPos = toSphericalCoords(rocketCamera.position.x, rocketCamera.position.y, rocketCamera.position.z);
-        console.log(oldCameraPos);
-
-        const newCameraPos = toCartesianCoords(oldCameraPos.x, oldCameraPos.y + phiDelta, oldCameraPos.z + thetaDelta);
-        console.log(newCameraPos);
-
-        rocketCamera.position.x = newCameraPos.x;
-        rocketCamera.position.y = newCameraPos.y;
-        rocketCamera.position.z = newCameraPos.z;
-        rocketCamera.lookAt(rocket.position);
 
     }
 
@@ -510,42 +549,57 @@ function animate() {
         rocket.lookAt(0, 0, 0);
 
         // Combinations 
-        if (keyMap[ARROWUP] == true && keyMap[ARROWRIGHT] == true 
-        && keyMap[ARROWDOWN] == false && keyMap[ARROWLEFT] == false ) {     //ArrowUp + ArrowRight
-            if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2)
-                rocket.rotateZ(Math.PI);
-            rocket.rotateZ(Math.PI/4);
+        if (keyPressed[ARROWUP] && keyPressed[ARROWRIGHT] 
+        && !keyPressed[ARROWDOWN] && !keyPressed[ARROWLEFT] ) {     //ArrowUp + ArrowRight
 
-        } else if (keyMap[ARROWUP] == true && keyMap[ARROWLEFT] == true 
-        && keyMap[ARROWDOWN] == false && keyMap[ARROWRIGHT] == false ) {   //ArrowUp + ArrowLeft
-            if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2)
+            if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2){
                 rocket.rotateZ(Math.PI);
-            rocket.rotateZ(-Math.PI/4);
+                rocket.rotateZ(-Math.PI/4)
+            } else {
+                rocket.rotateZ(Math.PI/4);
+            }
+            
+        } else if (keyPressed[ARROWUP] && keyPressed[ARROWLEFT] 
+        && !keyPressed[ARROWDOWN] && !keyPressed[ARROWRIGHT] ) {   //ArrowUp + ArrowLeft
 
-        } else if (keyMap[ARROWDOWN] == true && keyMap[ARROWRIGHT] == true 
-        && keyMap[ARROWUP] == false && keyMap[ARROWLEFT] == false ) {       //ArrowDown + ArrowRight
-            if (rocketSphCoords.theta < Math.PI/2 || rocketSphCoords.theta > 3*Math.PI/2)
+            if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2){
                 rocket.rotateZ(Math.PI);
-            rocket.rotateZ(-Math.PI/4);
+                rocket.rotateZ(Math.PI/4);
+            } else {
+                rocket.rotateZ(-Math.PI/4);
+            }
 
-        } else if (keyMap[ARROWDOWN] == true && keyMap[ARROWLEFT] == true 
-        && keyMap[ARROWUP] == false && keyMap[ARROWRIGHT] == false ) {     //ArrowDown + ArrowLeft
-            if (rocketSphCoords.theta < Math.PI/2 || rocketSphCoords.theta > 3*Math.PI/2)
+        } else if (keyPressed[ARROWDOWN] && keyPressed[ARROWRIGHT] 
+        && !keyPressed[ARROWUP] && !keyPressed[ARROWLEFT] ) {       //ArrowDown + ArrowRight
+
+            if (rocketSphCoords.theta < Math.PI/2 || rocketSphCoords.theta > 3*Math.PI/2){
                 rocket.rotateZ(Math.PI);
-            rocket.rotateZ(Math.PI/4);
+                rocket.rotateZ(-Math.PI/4);
+            } else {
+                rocket.rotateZ(Math.PI/4);
+            }
+
+        } else if (keyPressed[ARROWDOWN] && keyPressed[ARROWLEFT] 
+        && !keyPressed[ARROWUP] && !keyPressed[ARROWRIGHT] ) {     //ArrowDown + ArrowLeft
+            if (rocketSphCoords.theta < Math.PI/2 || rocketSphCoords.theta > 3*Math.PI/2){
+                rocket.rotateZ(Math.PI);
+                rocket.rotateZ(Math.PI/4);
+            } else {
+                rocket.rotateZ(-Math.PI/4);
+            }
         
-        } else if (keyMap[ARROWUP] == true) { //ArrowUp
+        } else if (keyPressed[ARROWUP]) { //ArrowUp
             if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2)
                 rocket.rotateZ(Math.PI);           
 
-        } else if (keyMap[ARROWDOWN] == true) { //ArrowDown
+        } else if (keyPressed[ARROWDOWN]) { //ArrowDown
             if (rocketSphCoords.theta < Math.PI/2 || rocketSphCoords.theta > 3*Math.PI/2)
                 rocket.rotateZ(Math.PI);
 
-        } else if (keyMap[ARROWRIGHT] == true) { //ArrowRight
+        } else if (keyPressed[ARROWRIGHT]) { //ArrowRight
             rocket.rotateZ(Math.PI/2);
 
-        } else if (keyMap[ARROWLEFT] == true) { //ArrowLeft
+        } else if (keyPressed[ARROWLEFT]) { //ArrowLeft
             rocket.rotateZ(-Math.PI/2);
         }
 
