@@ -183,7 +183,7 @@ function chooseQuadrant(theta) {
 
 }
 
-function createBoundingBox(x, y, z, radius) {
+function createBoundingBox(radius) {
     
     const boundingBox = new THREE.Object3D();
     
@@ -191,7 +191,7 @@ function createBoundingBox(x, y, z, radius) {
     const geometry = new THREE.SphereGeometry(radius, 50, 50);
     const mesh = new THREE.Mesh(geometry, material);
 
-    boundingBox.position.set(x, y, z);
+    boundingBox.position.set(0, 0, 0);
 
     boundingBoxes.push(boundingBox);
     boundingBox.add(mesh);
@@ -212,32 +212,36 @@ function createSpaceJunk(sphericalCoords) {
     const radius = 1/2 * (junkMinSize + Math.random()*(junkMaxSize - junkMinSize));
     const angle = Math.random() * (2*Math.PI);
 
-    var junk;
+    var junk, boundingBox;
     const textureLoader = new THREE.TextureLoader();
 
     if (option < 0.25) {
         junk = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, 0x5A4D41,
                     new THREE.SphereGeometry(radius, 5, 5), THREE.DoubleSide,
                     textureLoader.load('../textures/rock2.jpg'));
-        createBoundingBox(pos.x, pos.y, pos.z, radius);
+        boundingBox = createBoundingBox(radius);
+        junk.add(boundingBox);
 
     } else if ( 0.25 < option && option < 0.50) {
         junk = createPrimitive(pos.x, pos.y, pos.z, 0, angle, 0, 0xFFFFFF,
                     new THREE.BoxGeometry(2*radius, 2*radius, 2*radius, 3, 3), THREE.DoubleSide,
                     textureLoader.load('../textures/metal.jpg'));
-        createBoundingBox(pos.x, pos.y, pos.z, Math.sqrt(3) * (2*radius)/2)
+        boundingBox = createBoundingBox(Math.sqrt(3) * (2*radius)/2)
+        junk.add(boundingBox);
 
     } else if ( 0.5 < option && option < 0.75) {
         junk = createPrimitive(pos.x, pos.y, pos.z, angle, 0, 0, 0x918E85,
                     new THREE.IcosahedronGeometry(radius, 0), THREE.DoubleSide,
                     textureLoader.load('../textures/rock.jpg'));
-        createBoundingBox(pos.x, pos.y, pos.z, radius);
+        boundingBox = createBoundingBox(radius - 2);
+        junk.add(boundingBox);
 
     } else {
         junk = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, 0xA9A9A9,
                     new THREE.CylinderGeometry(0, radius, 2*radius, 3, 3), THREE.DoubleSide,
                     textureLoader.load('../textures/comet.jpg'));
-        createBoundingBox(pos.x, pos.y, pos.z, Math.sqrt((2*radius)**2 + (radius**2)/3));
+        boundingBox = createBoundingBox(Math.sqrt((2*radius)**2 + (radius**2)/3));
+        junk.add(boundingBox);
     }
 
     
@@ -471,14 +475,12 @@ function onKeyDown(e) {
         case 109: //m
             if (speed + speedDelta < maxSpeed) {
                 speed += speedDelta; 
-                console.log(speed);
             }
             break;
         case 78:  //N
         case 110: //n
             if (speed - speedDelta > minSpeed) {
                 speed -= speedDelta;
-                console.log(speed);
             }
             break;
         default:
