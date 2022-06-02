@@ -23,6 +23,7 @@ var orthographicCamera, perspectiveCamera, rocketCamera;
 const cameraDist = 35;
 const cameraOffset = 10;
 const screenArea = screen.width * screen.height;
+const viewSize = 900;
 
 // Arrays
 var cameras = [];
@@ -264,12 +265,12 @@ function createCamera(x, y, z) {
 
 function createOrthographicCamera(x, y, z) {
     'use strict';
-
-    var orthoCamera = new THREE.OrthographicCamera( window.innerWidth / - 20,
-                                                       window.innerWidth / 20,
-                                                       window.innerHeight / 20, 
-                                                       window.innerHeight / -20, 
-                                                       1, 
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    var orthoCamera = new THREE.OrthographicCamera( aspectRatio * viewSize / - 20,
+                                                       aspectRatio * viewSize / 20,
+                                                       viewSize / 20, 
+                                                       viewSize / -20, 
+                                                       -100, 
                                                        1000 );
     // Position
     orthoCamera.position.x = x;
@@ -287,16 +288,19 @@ function createOrthographicCamera(x, y, z) {
 function resizeCameras(){
 
     cameras.forEach((camera) => {
+        
+        const aspectRatio = window.innerWidth / window.innerHeight;
 
         if (camera.isPerspectiveCamera){
-            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.aspect = aspectRatio;
         
         } else if (camera.isOrthographicCamera){
+            
+            camera.left = viewSize * aspectRatio / - 20;
+            camera.right = viewSize * aspectRatio / 20;
+            camera.top = viewSize / 20;
+            camera.bottom = viewSize  / - 20;
 
-            camera.left = window.innerWidth / - 20;
-            camera.right = window.innerWidth / 20;
-            camera.top = window.innerHeight / 20;
-            camera.bottom = window.innerHeight  / - 20;
         }
 
         camera.updateProjectionMatrix();
