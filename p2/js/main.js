@@ -32,6 +32,7 @@ var primitives = []; // [earth, clouds, rocket1, ... , rocket6, junk1, junk2, ..
 var keyPressed = [];
 var junkSphCoords = []; // [junk1, junk2, ... , junkN]
 var junkPrimitivesPerQuadrant = [[], [], [], []]; // junk primitives divided by quadrants
+var boundingBoxes = []; // Array of bounding boxes
 
 // Objects
 const R = 30;
@@ -183,6 +184,24 @@ function chooseQuadrant(theta) {
 
 }
 
+function createBoundingBox(x, y, z, radius) {
+    
+    const boundingBox = new THREE.Object3D();
+    
+    const material = new THREE.MeshBasicMaterial({ transparent : true, opacity: 0.35, color: 0xDE1738 });
+    const _geometry = new THREE.SphereGeometry(radius, 50, 50);
+    const mesh = new THREE.Mesh(_geometry, material);
+
+    boundingBox.position.set(x, y, z);
+
+    boundingBoxes.push(boundingBox);
+    boundingBox.add(mesh);
+
+    scene.add(boundingBox);
+    
+    return boundingBox;
+}
+
 function createRandomPrimitive(sphericalCoords) {
 
     // Position
@@ -214,12 +233,14 @@ function createRandomPrimitive(sphericalCoords) {
             textureLoader.load('../textures/comet.jpg'));
     }
 
+    
     const theta = sphericalCoords.z;
-
     const phi = sphericalCoords.y;
-
+    
     divideByQuadrants(phi, theta, radius, primitive);
-
+    
+    createBoundingBox(pos.x, pos.y, pos.z, radius);
+    
     scene.add(primitive);
 }
 
@@ -248,6 +269,8 @@ function createRocket(body, front, propellers) {
     rocketAxisHelper = new THREE.AxesHelper(10);
     rocketAxisHelper.visible = false;
     rocket.add(rocketAxisHelper);
+    
+    rocket.add(createBoundingBox(0, 0, 0, rocketHitboxRadius));
     
     scene.add(rocket);
 
@@ -426,6 +449,12 @@ function onKeyDown(e) {
         case 52: //4
             for (var i = 0; i < materials.length; i++) {
                 materials[i].wireframe = !materials[i].wireframe;
+            }
+            break;
+        case 66: //B
+        case 98: //b
+            for (var i = 0; i < boundingBoxes.length; i++) {
+                boundingBoxes[i].visible = !boundingBoxes[i].visible;
             }
             break;
         case 69:  //E
