@@ -14,13 +14,13 @@ const ARROWLEFT = 37;
 var speed = 4;
 const deltaAngle = 1/(3*Math.PI);
 
-const maxSpeed = 8;
+const maxSpeed = 12;
 const minSpeed = 1;
 const speedDelta = 1;
 
 // Cameras
 var orthographicCamera, perspectiveCamera, rocketCamera;
-const cameraDist = 35;
+const cameraDist = 40;
 const cameraOffset = 10;
 const screenArea = screen.width * screen.height;
 
@@ -155,49 +155,30 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
 
 function divideByQuadrants(phi, theta, radius, primitive) {
 
-    if ((phi < Math.PI/12 && phi >= 0) || (phi < Math.PI && phi >= Math.PI - Math.PI/2)) {
-        junkPrimitivesPerQuadrant[0].push(primitive);
-        junkHitboxRadiuses[0].push(radius);
-        junkPrimitivesPerQuadrant[1].push(primitive);
-        junkHitboxRadiuses[1].push(radius);
-        junkPrimitivesPerQuadrant[2].push(primitive);
-        junkHitboxRadiuses[2].push(radius);
-        junkPrimitivesPerQuadrant[3].push(primitive);
-        junkHitboxRadiuses[3].push(radius);
-    }
-    else if (theta > 0 && theta < Math.PI/2){
-        junkPrimitivesPerQuadrant[0].push(primitive);
-        junkHitboxRadiuses[0].push(radius);
-    }
-    else if (theta > Math.PI/2 && theta < Math.PI){
-        junkPrimitivesPerQuadrant[1].push(primitive);
-        junkHitboxRadiuses[1].push(radius);
-    }
-    else if (theta > Math.PI && theta < 3*Math.PI/2){
-        junkPrimitivesPerQuadrant[2].push(primitive);
-        junkHitboxRadiuses[2].push(radius);
-    }
-    else if (theta > Math.PI && theta < 2*Math.PI) {
-        junkPrimitivesPerQuadrant[3].push(primitive);
-        junkHitboxRadiuses[3].push(radius);
+    var quadrant;
+
+    if (phi < Math.PI/12 || phi >= Math.PI - Math.PI/2) quadrant = -1; // All quadrants
+    else quadrant = chooseQuadrant(theta);
+
+    if (quadrant == -1){
+        // All quadrants
+        for (var quadrant = 0; quadrant < 4; quadrant++) {
+            junkPrimitivesPerQuadrant[quadrant].push(primitive);
+            junkHitboxRadiuses[quadrant].push(radius);
+        }
+    } else {
+        junkPrimitivesPerQuadrant[quadrant].push(primitive);
+        junkHitboxRadiuses[quadrant].push(radius);
     }
 
 }
 
 function chooseQuadrant(theta) {
 
-    if (theta >= 0 && theta < Math.PI/2){
-        return 0;
-    }
-    else if (theta >= Math.PI/2 && theta < Math.PI){
-        return 1;
-    }
-    else if (theta >= Math.PI && theta < 3*Math.PI/2){
-        return 2;
-    }
-    else {
-        return 3;
-    }
+    if (theta >= 0 && theta < Math.PI/2) return 0;
+    else if (theta >= Math.PI/2 && theta < Math.PI) return 1;
+    else if (theta >= Math.PI && theta < 3*Math.PI/2) return 2;
+    else return 3;
 
 }
 
@@ -491,7 +472,7 @@ function init() {
     createScene();
     
     // Spotlights for the shadows
-    const light1 = new THREE.DirectionalLight(0x404040, 6);
+    const light1 = new THREE.DirectionalLight(0x404040, 5);
     scene.add(light1);
 
     const light2 = new THREE.AmbientLight(0xF7F7F7, 1);
