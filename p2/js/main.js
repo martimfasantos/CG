@@ -13,7 +13,6 @@ const ARROWLEFT = 37;
 // Translaction
 var speed = 5;
 const deltaAngle = 1/(3*Math.PI);
-
 const maxSpeed = 20;
 const minSpeed = 1;
 const speedDelta = 1;
@@ -188,21 +187,22 @@ function createBoundingBox(x, y, z, radius) {
     
     const boundingBox = new THREE.Object3D();
     
-    const material = new THREE.MeshBasicMaterial({ transparent : true, opacity: 0.35, color: 0xDE1738 });
-    const _geometry = new THREE.SphereGeometry(radius, 50, 50);
-    const mesh = new THREE.Mesh(_geometry, material);
+    const material = new THREE.MeshBasicMaterial({ color: 0xDE1738, transparent : true, opacity: 0.35 });
+    const geometry = new THREE.SphereGeometry(radius, 50, 50);
+    const mesh = new THREE.Mesh(geometry, material);
 
     boundingBox.position.set(x, y, z);
 
     boundingBoxes.push(boundingBox);
     boundingBox.add(mesh);
-
+    
+    boundingBox.visible = false;
     scene.add(boundingBox);
     
     return boundingBox;
 }
 
-function createRandomPrimitive(sphericalCoords) {
+function createSpaceJunk(sphericalCoords) {
 
     // Position
     const pos = toCartesianCoords(sphericalCoords.x, sphericalCoords.y, sphericalCoords.z);
@@ -210,38 +210,43 @@ function createRandomPrimitive(sphericalCoords) {
     // Settings
     const option = Math.random();
     const radius = 1/2 * (junkMinSize + Math.random()*(junkMaxSize - junkMinSize));
-    const angle = Math.random()*360;
+    const angle = Math.random() * (2*Math.PI);
 
-    var primitive;
+    var junk;
     const textureLoader = new THREE.TextureLoader();
 
     if (option < 0.25) {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, 0x5A4D41,
-            new THREE.SphereGeometry(radius, 5, 5), THREE.DoubleSide,
-            textureLoader.load('../textures/rock2.jpg'));
+        junk = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, 0x5A4D41,
+                    new THREE.SphereGeometry(radius, 5, 5), THREE.DoubleSide,
+                    textureLoader.load('../textures/rock2.jpg'));
+        createBoundingBox(pos.x, pos.y, pos.z, radius);
+
     } else if ( 0.25 < option && option < 0.50) {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, 0, degreesToRadians(angle), 0, 0xFFFFFF,
-            new THREE.BoxGeometry(2*radius, 2*radius, 2*radius, 3, 3), THREE.DoubleSide,
-            textureLoader.load('../textures/metal.jpg'));
+        junk = createPrimitive(pos.x, pos.y, pos.z, 0, angle, 0, 0xFFFFFF,
+                    new THREE.BoxGeometry(2*radius, 2*radius, 2*radius, 3, 3), THREE.DoubleSide,
+                    textureLoader.load('../textures/metal.jpg'));
+        createBoundingBox(pos.x, pos.y, pos.z, Math.sqrt(3) * (2*radius)/2)
+
     } else if ( 0.5 < option && option < 0.75) {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, 0, 0x918E85,
-            new THREE.IcosahedronGeometry(radius, 0), THREE.DoubleSide,
-            textureLoader.load('../textures/rock.jpg'));
+        junk = createPrimitive(pos.x, pos.y, pos.z, angle, 0, 0, 0x918E85,
+                    new THREE.IcosahedronGeometry(radius, 0), THREE.DoubleSide,
+                    textureLoader.load('../textures/rock.jpg'));
+        createBoundingBox(pos.x, pos.y, pos.z, radius);
+
     } else {
-        primitive = createPrimitive(pos.x, pos.y, pos.z, degreesToRadians(angle), 0, 0, 0xA9A9A9,
-            new THREE.CylinderGeometry(0, radius, 2*radius, 3, 3), THREE.DoubleSide,
-            textureLoader.load('../textures/comet.jpg'));
+        junk = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, 0xA9A9A9,
+                    new THREE.CylinderGeometry(0, radius, 2*radius, 3, 3), THREE.DoubleSide,
+                    textureLoader.load('../textures/comet.jpg'));
+        createBoundingBox(pos.x, pos.y, pos.z, Math.sqrt((2*radius)**2 + (radius**2)/3));
     }
 
     
     const theta = sphericalCoords.z;
     const phi = sphericalCoords.y;
     
-    divideByQuadrants(phi, theta, radius, primitive);
+    divideByQuadrants(phi, theta, radius, junk);
     
-    createBoundingBox(pos.x, pos.y, pos.z, radius);
-    
-    scene.add(primitive);
+    scene.add(junk);
 }
 
 function createRocket(body, front, propellers) {
@@ -388,7 +393,7 @@ function createObjects() {
         textureLoader.load('../textures/propeller.jpg'));
 
     /* Add hitboxes */
-    rocketHitboxRadius = Math.max(H/2, bodyRadius + 2*propellerRadius);
+    rocketHitboxRadius = Math.max(1.2*H/2, bodyRadius + 2*propellerRadius);
 
     createRocket(body, front, [propeller1, propeller2, propeller3, propeller4]);
 
@@ -411,7 +416,7 @@ function createObjects() {
         
         junkSphCoords.push(sphericalCoords);
 
-        createRandomPrimitive(sphericalCoords);
+        createSpaceJunk(sphericalCoords);
     }
 
     // --------------------------------
