@@ -112,7 +112,7 @@ function createPlanet(x, y, z){
     // Clouds
     const clouds = new THREE.Object3D();
 
-    const cloudGeometry = new THREE.SphereGeometry(1.02*R, 32, 32);
+    const cloudGeometry = new THREE.SphereGeometry(1.03*R, 32, 32);
     const cloudMaterial = new THREE.MeshPhongMaterial({
         map: textureLoader.load('../textures/earth_clouds.png'),
         transparent: true
@@ -269,7 +269,7 @@ function createOrthographicCamera(x, y, z) {
                                                        window.innerWidth / 20,
                                                        window.innerHeight / 20, 
                                                        window.innerHeight / -20, 
-                                                       1, 
+                                                       -100, 
                                                        1000 );
     // Position
     orthoCamera.position.x = x;
@@ -293,7 +293,7 @@ function resizeCameras(){
         
         } else if (camera.isOrthographicCamera){
 
-            camera.left = window.innerWidth / - 20;
+            camera.left = window.innerWidth / - 20  ;
             camera.right = window.innerWidth / 20;
             camera.top = window.innerHeight / 20;
             camera.bottom = window.innerHeight  / - 20;
@@ -358,7 +358,8 @@ function createObjects() {
 
     // Space junk
     for (var i = 0; i < junks; i++) {
-        // Spaceship random start position
+
+        // Junk random start position
         var phi = Math.random() * Math.PI;
         var theta = Math.random() * (2*Math.PI);
         var sphericalCoords = new THREE.Vector3(1.2 * R, phi, theta);
