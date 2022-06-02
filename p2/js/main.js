@@ -154,6 +154,37 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
 
 }
 
+function divideByQuadrants(phi, theta, radius, primitive) {
+
+    if ((phi < Math.PI/12 && phi >= 0) || (phi < Math.PI && phi >= Math.PI - Math.PI/2)) {
+        junkPrimitivesPerQuadrant[0].push(primitive);
+        junkHitboxRadiuses[0].push(radius);
+        junkPrimitivesPerQuadrant[1].push(primitive);
+        junkHitboxRadiuses[1].push(radius);
+        junkPrimitivesPerQuadrant[2].push(primitive);
+        junkHitboxRadiuses[2].push(radius);
+        junkPrimitivesPerQuadrant[3].push(primitive);
+        junkHitboxRadiuses[3].push(radius);
+    }
+    else if (theta > 0 && theta < Math.PI/2){
+        junkPrimitivesPerQuadrant[0].push(primitive);
+        junkHitboxRadiuses[0].push(radius);
+    }
+    else if (theta > Math.PI/2 && theta < Math.PI){
+        junkPrimitivesPerQuadrant[1].push(primitive);
+        junkHitboxRadiuses[1].push(radius);
+    }
+    else if (theta > Math.PI && theta < 3*Math.PI/2){
+        junkPrimitivesPerQuadrant[2].push(primitive);
+        junkHitboxRadiuses[2].push(radius);
+    }
+    else if (theta > Math.PI && theta < 2*Math.PI) {
+        junkPrimitivesPerQuadrant[3].push(primitive);
+        junkHitboxRadiuses[3].push(radius);
+    }
+
+}
+
 function chooseQuadrant(theta) {
 
     if (theta >= 0 && theta < Math.PI/2){
@@ -203,10 +234,10 @@ function createRandomPrimitive(sphericalCoords) {
     }
 
     const theta = sphericalCoords.z;
-    const quadrant = chooseQuadrant(theta);
 
-    junkPrimitivesPerQuadrant[quadrant].push(primitive);
-    junkHitboxRadiuses[quadrant].push(radius);
+    const phi = sphericalCoords.y;
+
+    divideByQuadrants(phi, theta, radius, primitive);
 
     scene.add(primitive);
 }
