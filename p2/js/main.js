@@ -40,6 +40,7 @@ const junks = 20;
 const junkMaxSize = R/20;
 const junkMinSize = R/24;
 
+// Rocket
 var rocket;
 var rocketSphCoords = {
     radius : null,
@@ -51,6 +52,8 @@ var rocketSphCoords = {
 var rocketHitboxRadius;
 var junkHitboxRadiuses = [[], [], [], []];
 
+
+
 function toCartesianCoords(radius, phi, theta) {
 
     const sinPhiRadius = Math.sin( phi ) * radius;
@@ -60,6 +63,7 @@ function toCartesianCoords(radius, phi, theta) {
     const z = sinPhiRadius * Math.cos( theta );
 
     return new THREE.Vector3(x, y, z); /* format: (x, y, z) */
+
 }
 
 function toSphericalCoords(x, y, z) {
@@ -202,6 +206,7 @@ function createBoundingBox(radius) {
     scene.add(boundingBox);
     
     return boundingBox;
+
 }
 
 function createSpaceJunk(sphericalCoords) {
@@ -253,6 +258,7 @@ function createSpaceJunk(sphericalCoords) {
     divideByQuadrants(phi, theta, boundingBoxRadius, junk);
     
     scene.add(junk);
+
 }
 
 function createRocket(body, front, propellers) {
@@ -308,6 +314,7 @@ function createCamera(x, y, z) {
     cameras.push(camera);
 
     return camera;
+    
 }
 
 function createOrthographicCamera(x, y, z) {
@@ -514,7 +521,7 @@ function init() {
     
     createScene();
     
-    // Lights for the shadows
+    // Lights
     const light1 = new THREE.DirectionalLight(0x404040, 5);
     scene.add(light1);
 
@@ -572,7 +579,7 @@ function animate() {
     checkCollision();
 
     // Translation
-    if (keyPressed[ARROWUP]) { //ArrowUp
+    if (keyPressed[ARROWUP]) {          //ArrowUp
         if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2) { 
             phiDelta += translationDelta;
         } else { 
@@ -580,7 +587,7 @@ function animate() {
         }
     }   
 
-    if (keyPressed[ARROWDOWN]) { //ArrowDown
+    if (keyPressed[ARROWDOWN]) {        //ArrowDown
         if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2) { 
             phiDelta -= translationDelta;
         } else { 
@@ -588,11 +595,11 @@ function animate() {
         }
     } 
 
-    if (keyPressed[ARROWRIGHT]) { //ArrowRight
+    if (keyPressed[ARROWRIGHT]) {       //ArrowRight
         thetaDelta += translationDelta;
     }
 
-    if (keyPressed[ARROWLEFT]) { //ArrowLeft
+    if (keyPressed[ARROWLEFT]) {        //ArrowLeft
         thetaDelta -= translationDelta;
         
     }
@@ -616,7 +623,8 @@ function animate() {
 
     requestAnimationFrame(animate);
 
-    // Auxiliar functions
+    // ------------  Auxiliar functions ----------------
+
     function moveRocket(newPos) {
 
         rocket.position.x = newPos.x;
@@ -632,7 +640,6 @@ function animate() {
 
     }
 
-    // Aux function
     function directRocket() {
 
         rocket.lookAt(0, 0, 0);
@@ -643,7 +650,7 @@ function animate() {
 
             if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2){
                 rocket.rotateZ(Math.PI);
-                rocket.rotateZ(-Math.PI/4)
+                rocket.rotateZ(-Math.PI/4);
             } else {
                 rocket.rotateZ(Math.PI/4);
             }
@@ -677,18 +684,18 @@ function animate() {
                 rocket.rotateZ(-Math.PI/4);
             }
         
-        } else if (keyPressed[ARROWUP]) { //ArrowUp
+        } else if (keyPressed[ARROWUP]) {       //ArrowUp
             if (rocketSphCoords.theta > Math.PI/2 && rocketSphCoords.theta < 3*Math.PI/2)
                 rocket.rotateZ(Math.PI);           
 
-        } else if (keyPressed[ARROWDOWN]) { //ArrowDown
+        } else if (keyPressed[ARROWDOWN]) {     //ArrowDown
             if (rocketSphCoords.theta < Math.PI/2 || rocketSphCoords.theta > 3*Math.PI/2)
                 rocket.rotateZ(Math.PI);
 
-        } else if (keyPressed[ARROWRIGHT]) { //ArrowRight
+        } else if (keyPressed[ARROWRIGHT]) {    //ArrowRight
             rocket.rotateZ(Math.PI/2);
 
-        } else if (keyPressed[ARROWLEFT]) { //ArrowLeft
+        } else if (keyPressed[ARROWLEFT]) {     //ArrowLeft
             rocket.rotateZ(-Math.PI/2);
         }
 
