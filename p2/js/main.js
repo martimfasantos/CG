@@ -22,7 +22,7 @@ var orthographicCamera, perspectiveCamera, rocketCamera;
 const cameraDist = 42;
 const cameraOffset = 10;
 const screenArea = screen.width * screen.height;
-const viewSize = 900;
+const viewSize = 90;
 
 // Arrays
 var cameras = [];
@@ -196,13 +196,11 @@ function createBoundingBox(radius) {
     const mesh = new THREE.Mesh(geometry, material);
 
     boundingBox.position.set(0, 0, 0);
+    boundingBox.visible = false;
 
     boundingBoxes.push(boundingBox);
     boundingBox.add(mesh);
 
-    console.log(rocketHitboxRadius);
-    
-    boundingBox.visible = false;
     scene.add(boundingBox);
     
     return boundingBox;
@@ -320,10 +318,10 @@ function createCamera(x, y, z) {
 function createOrthographicCamera(x, y, z) {
     'use strict';
     const aspectRatio = window.innerWidth / window.innerHeight;
-    var orthoCamera = new THREE.OrthographicCamera( aspectRatio * viewSize / - 20,
-                                                       aspectRatio * viewSize / 20,
-                                                       viewSize / 20, 
-                                                       viewSize / -20, 
+    var orthoCamera = new THREE.OrthographicCamera( aspectRatio * viewSize / - 2,
+                                                       aspectRatio * viewSize / 2,
+                                                       viewSize / 2, 
+                                                       viewSize / - 2, 
                                                        -100, 
                                                        1000 );
     // Position
@@ -350,10 +348,10 @@ function resizeCameras(){
         
         } else if (camera.isOrthographicCamera){
             
-            camera.left = viewSize * aspectRatio / - 20;
-            camera.right = viewSize * aspectRatio / 20;
-            camera.top = viewSize / 20;
-            camera.bottom = viewSize  / - 20;
+            camera.left = viewSize * aspectRatio / - 2;
+            camera.right = viewSize * aspectRatio / 2;
+            camera.top = viewSize / 2;
+            camera.bottom = viewSize  / - 2;
 
         }
 
@@ -390,18 +388,23 @@ function createObjects() {
     const body = createPrimitive(0, 0, 0, 0, 0, 0, null,
         new THREE.CylinderGeometry(bodyRadius, bodyRadius, bodyLength, 25), THREE.DoubleSide,
         textureLoader.load('../textures/body.jpg'));
+
     const front = createPrimitive(0, bodyLength/2 + frontLength/2, 0, 0, 0, 0, null,
         new THREE.CylinderGeometry(bodyRadius/7, bodyRadius, frontLength, 25), THREE.DoubleSide,
         textureLoader.load('../textures/front.jpg'));
+    
     const propeller1 = createPrimitive(bodyRadius, -bodyLength/2, 0, 0, 0, 0, null,
         new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
         textureLoader.load('../textures/propeller.jpg'));
+
     const propeller2 = createPrimitive(0, -bodyLength/2, bodyRadius, 0, 0, 0, null,
         new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
         textureLoader.load('../textures/propeller.jpg'));
+    
     const propeller3 = createPrimitive(-bodyRadius, -bodyLength/2, 0, 0, 0, 0, null,
         new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
         textureLoader.load('../textures/propeller.jpg'));
+    
     const propeller4 = createPrimitive(0, -bodyLength/2, -bodyRadius, 0, 0, 0, null,
         new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
         textureLoader.load('../textures/propeller.jpg'));
@@ -500,7 +503,6 @@ function onKeyDown(e) {
 
 function onKeyUp(e) {
     'use strict';
-
     keyPressed[e.keyCode] = false;
 }
 
