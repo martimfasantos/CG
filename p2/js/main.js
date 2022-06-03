@@ -19,7 +19,7 @@ const speedDelta = 1;
 
 // Cameras
 var orthographicCamera, perspectiveCamera, rocketCamera;
-const cameraDist = 40;
+const cameraDist = 42;
 const cameraOffset = 10;
 const screenArea = screen.width * screen.height;
 const viewSize = 900;
@@ -195,6 +195,8 @@ function createBoundingBox(radius) {
 
     boundingBoxes.push(boundingBox);
     boundingBox.add(mesh);
+
+    console.log(rocketHitboxRadius);
     
     boundingBox.visible = false;
     scene.add(boundingBox);
@@ -213,42 +215,42 @@ function createSpaceJunk(sphericalCoords) {
     const angle = Math.random() * (2*Math.PI);
 
     var junk, boundingBox;
+    var boundingBoxRadius = 0;
+
     const textureLoader = new THREE.TextureLoader();
 
     if (option < 0.25) {
         junk = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, 0x5A4D41,
                     new THREE.SphereGeometry(radius, 5, 5), THREE.DoubleSide,
                     textureLoader.load('../textures/rock2.jpg'));
-        boundingBox = createBoundingBox(radius);
-        junk.add(boundingBox);
+        boundingBoxRadius = radius;
 
     } else if ( 0.25 < option && option < 0.50) {
         junk = createPrimitive(pos.x, pos.y, pos.z, 0, angle, 0, 0xFFFFFF,
                     new THREE.BoxGeometry(2*radius, 2*radius, 2*radius, 3, 3), THREE.DoubleSide,
                     textureLoader.load('../textures/metal.jpg'));
-        boundingBox = createBoundingBox(Math.sqrt(3) * (2*radius)/2)
-        junk.add(boundingBox);
+        boundingBoxRadius = Math.sqrt(3) * (2*radius)/2;
 
     } else if ( 0.5 < option && option < 0.75) {
         junk = createPrimitive(pos.x, pos.y, pos.z, angle, 0, 0, 0x918E85,
                     new THREE.IcosahedronGeometry(radius, 0), THREE.DoubleSide,
                     textureLoader.load('../textures/rock.jpg'));
-        boundingBox = createBoundingBox(radius - 2);
-        junk.add(boundingBox);
+        boundingBoxRadius = radius;
 
     } else {
         junk = createPrimitive(pos.x, pos.y, pos.z, 0, 0, 0, 0xA9A9A9,
                     new THREE.CylinderGeometry(0, radius, 2*radius, 3, 3), THREE.DoubleSide,
                     textureLoader.load('../textures/comet.jpg'));
-        boundingBox = createBoundingBox(Math.sqrt((2*radius)**2 + (radius**2)/3));
-        junk.add(boundingBox);
+        boundingBoxRadius = Math.sqrt((2*radius)**2 + (radius**2)/3) - 1/2 * radius;
     }
 
+    boundingBox = createBoundingBox(boundingBoxRadius);
+    junk.add(boundingBox);
     
     const theta = sphericalCoords.z;
     const phi = sphericalCoords.y;
     
-    divideByQuadrants(phi, theta, radius, junk);
+    divideByQuadrants(phi, theta, boundingBoxRadius, junk);
     
     scene.add(junk);
 }
@@ -279,7 +281,8 @@ function createRocket(body, front, propellers) {
     rocketAxisHelper.visible = false;
     rocket.add(rocketAxisHelper);
     
-    rocket.add(createBoundingBox(0, 0, 0, rocketHitboxRadius));
+    // Rocket hitbox
+    rocket.add(createBoundingBox(rocketHitboxRadius));
     
     scene.add(rocket);
 
@@ -396,7 +399,7 @@ function createObjects() {
         new THREE.CapsuleGeometry( propellerRadius, propellerLength, 4, 8 ), THREE.DoubleSide,
         textureLoader.load('../textures/propeller.jpg'));
 
-    /* Add hitboxes */
+    /* Hitbox size */
     rocketHitboxRadius = Math.max(1.2*H/2, bodyRadius + 2*propellerRadius);
 
     createRocket(body, front, [propeller1, propeller2, propeller3, propeller4]);
@@ -511,7 +514,7 @@ function init() {
     
     createScene();
     
-    // Spotlights for the shadows
+    // Lights for the shadows
     const light1 = new THREE.DirectionalLight(0x404040, 5);
     scene.add(light1);
 
@@ -522,11 +525,13 @@ function init() {
     orthographicCamera = createOrthographicCamera(0, 0, cameraDist);
     scene.add(orthographicCamera);
 
-    perspectiveCamera = createCamera(cameraDist, cameraDist, cameraDist);
+    perspectiveCamera = createCamera(cameraDist, cameraDist/1.2, cameraDist);
     scene.add(perspectiveCamera);
 
     rocketCamera = createCamera(0, -cameraOffset, -cameraOffset/3);
     rocket.add(rocketCamera);
+
+    camera = perspectiveCamera;
 
     // Events
     window.addEventListener("keydown", onKeyDown);
