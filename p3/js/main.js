@@ -154,7 +154,17 @@ function createObjects() {
 
     // Origamis
     
-    
+    origami1 = createPrimitive(width+3, height+5, 2.7*width, 0, 0, 0, 0xFFFFFF,
+        new THREE.BoxGeometry(3, 3, 3, 25), THREE.DoubleSide,
+        null);
+
+    origami2 = createPrimitive(width+3, height+5, 1.25*width, 0, 0, 0, 0xFFFFFF,
+        new THREE.BoxGeometry(3, 3, 3, 25), THREE.DoubleSide,
+        null);
+
+    origami3 = createPrimitive(width+3, height+5, -0.5*width, 0, 0, 0, 0xFFFFFF,
+        new THREE.BoxGeometry(3, 3, 3, 25), THREE.DoubleSide,
+        null);
 
     // --------------------------------
 
@@ -168,7 +178,7 @@ function createScene() {
 
     scene = new THREE.Scene();
 
-    worldAxisHelper = new THREE.AxesHelper(10);
+    worldAxisHelper = new THREE.AxesHelper(100);
     worldAxisHelper.visible = false;
     scene.add(worldAxisHelper);
 
@@ -183,10 +193,10 @@ function onKeyDown(e) {
 
     switch (e.keyCode) {
         case 49: //1
-            camera = orthographicCamera;
+            camera = perspectiveCamera;
             break;
         case 50: //2
-            camera = perspectiveCamera;
+            camera = orthographicCamera;
             break;
         case 51: //3
             // camera = rocketCamera;
@@ -272,7 +282,27 @@ function animate() {
     'use strict';
     
     var clockDelta = clock.getDelta();
-    // const translationDelta = deltaAngle * speed * clockDelta;
+    const rotationStep = deltaAngle * speed * clockDelta;
+
+    // Rotation
+    if (keyPressed[81] == true || keyPressed[113] == true) { //Q or q
+        origami1.rotateY( rotationStep );
+    }
+    if (keyPressed[87] == true || keyPressed[119] == true) { //W or w
+        origami1.rotateY( -rotationStep );
+    }
+    if (keyPressed[69] == true || keyPressed[101] == true) { //E or e
+        origami2.rotateY( rotationStep );
+    }
+    if (keyPressed[82] == true || keyPressed[114] == true) { //R or r
+        origami2.rotateY( -rotationStep );
+    }
+    if (keyPressed[84] == true || keyPressed[116] == true) { //T or t
+        origami3.rotateY( rotationStep );
+    }
+    if (keyPressed[89] == true || keyPressed[121] == true) { //Y or y
+        origami3.rotateY( -rotationStep );
+    }
  
     render();
 
