@@ -33,20 +33,31 @@ var materials = [];
 var primitives = [];
 var lights = [];
 var keyPressed = [];
-var lights = [];
+var origamis = [];
+var origamiMeshes = [];
+var objectMeshes = [];
+
+var origamiPhongMaterial;
+var objectPhongMaterial;
+var origamiLambMaterial ;
+var objectLambMaterial;
+
 
 // Objects
 var dirLight, spotLight1, spotLight2, spotLight3;
 var origami1, origami2, origami3;
 
+var isPhong = 0;
 
 function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side, texture, bump) {
 
     const primitive = new THREE.Object3D();
 
-    const material = new THREE.MeshPhongMaterial({ color: color, wireframe: false, side: side, map: texture, bumpMap: bump });
+    objectPhongMaterial = new THREE.MeshPhongMaterial({ color: color, wireframe: false, side: side, map: texture, bumpMap: bump });
+    objectLambMaterial = new THREE.MeshLambertMaterial({ color: color, wireframe: false, side: side, map: texture, bumpMap: bump });
+    
     const _geometry = geometry;
-    const mesh = new THREE.Mesh(_geometry, material);
+    const mesh = new THREE.Mesh(_geometry, objectPhongMaterial);
 
     primitive.position.set(x, y, z);
     primitive.rotateX(angleX);
@@ -55,7 +66,9 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
     primitive.add(mesh);
     primitive.castShadow = true;
 
-    materials.push(material);
+    objectMeshes.push(mesh);
+    materials.push(objectPhongMaterial);
+    materials.push(objectLambMaterial);
     primitives.push(primitive);
     scene.add(primitive);
 
@@ -145,7 +158,9 @@ function createOrigami1(x, y, z) {
     const orig1 = new THREE.Object3D();
     const size = 5;
 
-    const material = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
+    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
+    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+
     const geometry = new THREE.BufferGeometry();
 
     const vertices = new Float32Array([
@@ -170,10 +185,13 @@ function createOrigami1(x, y, z) {
     // const face2 = new THREE.Face(pointD, pointL, pointU);
     // origami1.add(face2);
 
-    const mesh = new THREE.Mesh(geometry, material);
+    const mesh = new THREE.Mesh(geometry, origamiPhongMaterial);
+    
+    origamiMeshes.push(mesh);
 
     orig1.add(mesh);
-    materials.push(material);
+    materials.push(origamiPhongMaterial);
+    materials.push(origamiLambMaterial);
     primitives.push(orig1);
     scene.add(orig1);
 
@@ -304,6 +322,22 @@ function onKeyDown(e) {
         case 52: //4
             for (var i = 0; i < materials.length; i++) {
                 materials[i].wireframe = !materials[i].wireframe;
+            }
+            break;
+        case 65: //A
+        case 97: //a
+            var orimat, objmat;
+                
+            if (!isPhong) { orimat = origamiPhongMaterial; objmat = objectPhongMaterial; isPhong = 1; console.log("changed to phong\n")}
+            else if (isPhong) { orimat = origamiLambMaterial; objmat = objectLambMaterial; isPhong = 0 ; console.log("changed to lambert\n");}
+            
+            for(var i = 0; i < origamiMeshes.length; i++) {
+                origamiMeshes[i].material.dispose();
+                origamiMeshes[i].material = orimat;
+            }
+            for(var i = 0; i < objectMeshes.length; i++) {
+                objectMeshes[i].material.dispose();
+                objectMeshes[i].material = objmat;
             }
             break;
         case 68: //D
