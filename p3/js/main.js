@@ -33,6 +33,7 @@ var materials = [];
 var primitives = [];
 var lights = [];
 var keyPressed = [];
+var lights = [];
 
 // Objects
 var dirLight, spotLight1, spotLight2, spotLight3;
@@ -161,7 +162,7 @@ function createOrigami1(x, y, z) {
 
     // const pointU = new THREE.Vector3(x, y + 5, z);
     // const pointR = new THREE.Vector3(x, y, z - 5);
-    // const pointD = new THREE.Vector3(x, y - 5, z);
+    // const pointorigami3D = new THREE.Vector3(x, y - 5, z);
     // const pointL = new THREE.Vector3(x, y, z + 5);
 
     // const face1 = new THREE.Face(pointD, pointR, pointU);
@@ -249,19 +250,18 @@ function createObjects() {
         new THREE.SphereGeometry(3, 32, 16, 0, 2 * Math.PI, Math.PI / 2, Math.PI / 2), THREE.DoubleSide,
         textureLoader.load('../textures/glass.jpg'), null);
 
-
     // --------------------------------
 
     // Origamis
 
-    origami1 = createOrigami1(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8);
+    // origami1 = createOrigami1(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8);
 
-    // createPrimitive(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8, 0, 0, 0, null,
-    //     new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
+    origami1 = createPrimitive(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8, 0, 0, 0, null,
+        new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
+        textureLoader.load('../textures/wood.jpg'), null);
     origami2 = createPrimitive(0, 1.1 * HEIGHT, 0, 0, 0, 0, null,
         new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
         textureLoader.load('../textures/wood.jpg'), null);
-    //     textureLoader.load('../textures/wood.jpg'), null);
     origami3 = createPrimitive(0, 1.1 * HEIGHT, -LENGTH / 2 + LENGTH / 8, 0, 0, 0, null,
         new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
         textureLoader.load('../textures/wood.jpg'), null);
@@ -293,10 +293,10 @@ function onKeyDown(e) {
 
     switch (e.keyCode) {
         case 49: //1
-            camera = orthographicCamera;
+            camera = perspectiveCamera;
             break;
         case 50: //2
-            camera = perspectiveCamera;
+            camera = orthographicCamera;
             break;
         case 51: //3
             // camera = rocketCamera;
