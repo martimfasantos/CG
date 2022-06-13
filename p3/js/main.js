@@ -21,11 +21,15 @@ const minSpeed = 2;
 const speedDelta = 2;
 
 // Cameras
-var orthographicCamera, perspectiveCamera, rocketCamera;
+var orthographicCamera, perspectiveCamera, pausedCamera;
 const cameraDist = 35;
 const cameraOffset = 10;
 const screenArea = screen.width * screen.height;
 const viewSize = 90;
+
+// Lights
+const dirLightIntensity = 0.8;
+const spotLightIntensity = 0.7;
 
 // Arrays
 var cameras = [];
@@ -37,8 +41,12 @@ var lights = [];
 
 // Objects
 var dirLight, spotLight1, spotLight2, spotLight3;
+var bulb1, bulb2, bulb3;
 var origami1, origami2, origami3;
 
+// Variables
+var chosenSpotlight, chosenBulb;
+var paused = false;
 
 function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side, texture, bump) {
 
@@ -60,6 +68,36 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
     scene.add(primitive);
 
     return primitive;
+
+}
+
+function whenPaused() {
+
+}
+
+// Duvida: é suposto fazer isto assim?? criar os objetos todos novamente
+function resetInitialState() {
+    'use strict';
+    for (var i = 0; i < scene.children.length; i++) {
+        const obj = scene.children[i];
+        scene.remove(obj);
+    }
+    speed = 14;
+    paused = false;
+    createScene();
+    setupLights();
+}
+
+function toggleSpotLight(spotLight, bulb) {
+    'use strict';
+    if (spotLight.intensity) {
+        spotLight.intensity = 0;
+        bulb.children[0].material.map = new THREE.TextureLoader().load('../textures/bulbOFF.jpg');
+    } else {
+        spotLight.intensity = spotLightIntensity;
+        bulb.children[0].material.map = new THREE.TextureLoader().load('../textures/bulbON.jpg');
+    }
+    bulb.children[0].material.needsUpdate = true;
 
 }
 
@@ -215,40 +253,42 @@ function createObjects() {
     // Spotlights
 
     /* --- Support --- */
-    const support = createPrimitive(0, 4 * HEIGHT + 3, 0, 0, 0, 0, null,
+    const support = createPrimitive(0, 4 * HEIGHT + 2, 0, 0, 0, 0, null,
         new THREE.CylinderGeometry(0.3, 0.3, LENGTH), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
     support.rotation.x = Math.PI / 2;
-    createPrimitive(0, (4 * HEIGHT + 3) / 2, LENGTH / 2, 0, 0, 0, null,
-        new THREE.CylinderGeometry(0.3, 0.3, 4 * HEIGHT + 3), THREE.DoubleSide,
+    createPrimitive(0, (4 * HEIGHT + 2) / 2, LENGTH / 2, 0, 0, 0, null,
+        new THREE.CylinderGeometry(0.3, 0.3, 4 * HEIGHT + 2), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
-    createPrimitive(0, (4 * HEIGHT + 3) / 2, -LENGTH / 2, 0, 0, 0, null,
-        new THREE.CylinderGeometry(0.3, 0.3, 4 * HEIGHT + 3), THREE.DoubleSide,
+    createPrimitive(0, (4 * HEIGHT + 2) / 2, -LENGTH / 2, 0, 0, 0, null,
+        new THREE.CylinderGeometry(0.3, 0.3, 4 * HEIGHT + 2), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
 
-    /* --- Z --- */
-    createPrimitive(0, 4 * HEIGHT, -LENGTH / 2 + LENGTH / 8, 0, 0, 0, null,
-        new THREE.ConeGeometry(6, 10, 32), THREE.DoubleSide,
-        textureLoader.load('../textures/metal.jpg'), null);
-    createPrimitive(0, 4 * HEIGHT - 5, -LENGTH / 2 + LENGTH / 8, 0, 0, 0, null,
-        new THREE.SphereGeometry(3, 32, 16, 0, 2 * Math.PI, Math.PI / 2, Math.PI / 2), THREE.DoubleSide,
-        textureLoader.load('../textures/glass.jpg'), null);
-
-    /* --- X --- */
-    createPrimitive(0, 4 * HEIGHT, 0, 0, 0, 0, null,
-        new THREE.ConeGeometry(6, 10, 32), THREE.DoubleSide,
-        textureLoader.load('../textures/metal.jpg'), null);
-    createPrimitive(0, 4 * HEIGHT - 5, 0, 0, 0, 0, null,
-        new THREE.SphereGeometry(3, 32, 16, 0, 2 * Math.PI, Math.PI / 2, Math.PI / 2), THREE.DoubleSide,
-        textureLoader.load('../textures/glass.jpg'), null);
-
-    /* --- C --- */
+    /* --- Right (Z) --- */
     createPrimitive(0, 4 * HEIGHT, LENGTH / 2 - LENGTH / 8, 0, 0, 0, null,
-        new THREE.ConeGeometry(6, 10, 32), THREE.DoubleSide,
+        new THREE.ConeGeometry(6, 9, 32), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
-    createPrimitive(0, 4 * HEIGHT - 5, LENGTH / 2 - LENGTH / 8, 0, 0, 0, null,
+    bulb1 = createPrimitive(0, 4 * HEIGHT - 5, LENGTH / 2 - LENGTH / 8, 0, 0, 0, null,
         new THREE.SphereGeometry(3, 32, 16, 0, 2 * Math.PI, Math.PI / 2, Math.PI / 2), THREE.DoubleSide,
-        textureLoader.load('../textures/glass.jpg'), null);
+        textureLoader.load('../textures/bulbON.jpg'), null);
+
+    /* --- Center (X) --- */
+    createPrimitive(0, 4 * HEIGHT, 0, 0, 0, 0, null,
+        new THREE.ConeGeometry(6, 9, 32), THREE.DoubleSide,
+        textureLoader.load('../textures/metal.jpg'), null);
+    bulb2 = createPrimitive(0, 4 * HEIGHT - 5, 0, 0, 0, 0, null,
+        new THREE.SphereGeometry(3, 32, 16, 0, 2 * Math.PI, Math.PI / 2, Math.PI / 2), THREE.DoubleSide,
+        textureLoader.load('../textures/bulbON.jpg'), null);
+
+    /* --- Left (C) --- */
+    createPrimitive(0, 4 * HEIGHT, -LENGTH / 2 + LENGTH / 8, 0, 0, 0, null,
+        new THREE.ConeGeometry(6, 9, 32), THREE.DoubleSide,
+        textureLoader.load('../textures/metal.jpg'), null);
+    bulb3 = createPrimitive(0, 4 * HEIGHT - 5, -LENGTH / 2 + LENGTH / 8, 0, 0, 0, null,
+        new THREE.SphereGeometry(3, 32, 16, 0, 2 * Math.PI, Math.PI / 2, Math.PI / 2), THREE.DoubleSide,
+        textureLoader.load('../textures/bulbON.jpg'), null);
+
+
 
     // --------------------------------
 
@@ -292,6 +332,9 @@ function onKeyDown(e) {
     keyPressed[e.keyCode] = true;
 
     switch (e.keyCode) {
+
+        /* ----- Cameras ----- */
+
         case 49: //1
             camera = perspectiveCamera;
             break;
@@ -306,22 +349,37 @@ function onKeyDown(e) {
                 materials[i].wireframe = !materials[i].wireframe;
             }
             break;
+
+        /* ----- Lights ----- */
+
         case 68: //D
-        case 100: //d
-            dirLight.intensity = (dirLight.intensity == 0.8) ? 0 : 0.8;
+        case 100://d
+            dirLight.intensity = (dirLight.intensity == dirLightIntensity) ? 0 : dirLightIntensity;
             break;
         case 90: //Z
         case 122:
-            spotLight1.intensity = (spotLight1.intensity == 0.7) ? 0 : 0.7;
+            toggleSpotLight(spotLight1, bulb1);
             break;
         case 88: //X
-        case 120:
-            spotLight2.intensity = (spotLight2.intensity == 0.7) ? 0 : 0.7;
+        case 120://x
+            toggleSpotLight(spotLight2, bulb2);
             break;
         case 67: //C
         case 99: //c
-            spotLight3.intensity = (spotLight3.intensity == 0.7) ? 0 : 0.7;
+            toggleSpotLight(spotLight3, bulb3);
             break;
+        case 83: //S
+        case 115: //s
+            paused = true;
+            whenPaused();
+            break;
+        case 79: //O
+        case 111://o
+            if (paused) resetInitialState();
+            break;
+
+        /* ----- Others ----- */
+
         case 72:  //H
         case 104: //h
             worldAxisHelper.visible = !worldAxisHelper.visible;
@@ -359,7 +417,7 @@ function setupLights() {
     scene.add(ambLight);
 
     // Directional Light
-    dirLight = new THREE.DirectionalLight(0xFFFFFF, 0.8);
+    dirLight = new THREE.DirectionalLight(0xFFFFFF, dirLightIntensity);
     dirLight.position.set(LENGTH, 4 * HEIGHT, 0);
     lights.push(dirLight);
     scene.add(dirLight);
@@ -373,7 +431,7 @@ function setupLights() {
 
 function createSpotLight(x, y, z, target) {
 
-    const spotLight = new THREE.SpotLight(0xFFFFFF, 0.7);
+    const spotLight = new THREE.SpotLight(0xFFFFFF, spotLightIntensity);
     spotLight.position.set(x, y, z);
     spotLight.angle = Math.PI / 10;
     spotLight.target = target;
@@ -430,29 +488,33 @@ function flutatingAnimation() {
 function animate() {
     'use strict';
 
-    var clockDelta = clock.getDelta();
-    const rotationStep = deltaAngle * speed * clockDelta;
+    if (!paused) {
 
-    flutatingAnimation();
+        var clockDelta = clock.getDelta();
+        const rotationStep = deltaAngle * speed * clockDelta;
 
-    // Rotation
-    if (keyPressed[81] == true || keyPressed[113] == true) { //Q or q
-        origami1.rotateY(-rotationStep);
-    }
-    if (keyPressed[87] == true || keyPressed[119] == true) { //W or w
-        origami1.rotateY(rotationStep);
-    }
-    if (keyPressed[69] == true || keyPressed[101] == true) { //E or e
-        origami2.rotateY(-rotationStep);
-    }
-    if (keyPressed[82] == true || keyPressed[114] == true) { //R or r
-        origami2.rotateY(rotationStep);
-    }
-    if (keyPressed[84] == true || keyPressed[116] == true) { //T or t
-        origami3.rotateY(-rotationStep);
-    }
-    if (keyPressed[89] == true || keyPressed[121] == true) { //Y or y
-        origami3.rotateY(rotationStep);
+        flutatingAnimation();
+
+        // Rotation
+        if (keyPressed[81] == true || keyPressed[113] == true) { //Q or q
+            origami1.rotateY(-rotationStep);
+        }
+        if (keyPressed[87] == true || keyPressed[119] == true) { //W or w
+            origami1.rotateY(rotationStep);
+        }
+        if (keyPressed[69] == true || keyPressed[101] == true) { //E or e
+            origami2.rotateY(-rotationStep);
+        }
+        if (keyPressed[82] == true || keyPressed[114] == true) { //R or r
+            origami2.rotateY(rotationStep);
+        }
+        if (keyPressed[84] == true || keyPressed[116] == true) { //T or t
+            origami3.rotateY(-rotationStep);
+        }
+        if (keyPressed[89] == true || keyPressed[121] == true) { //Y or y
+            origami3.rotateY(rotationStep);
+        }
+
     }
 
     render();
