@@ -36,26 +36,30 @@ var keyPressed = [];
 var origamis = [];
 var origamiMeshes = [];
 var objectMeshes = [];
+var textures = [];
 
 var origamiPhongMaterial;
 var objectPhongMaterial;
 var origamiLambMaterial ;
 var objectLambMaterial;
-
+var origamiBasicMaterial;
+var objectBasicMaterial;
 
 // Objects
 var dirLight, spotLight1, spotLight2, spotLight3;
 var origami1, origami2, origami3;
 
-var isPhong = 0;
+var activeMaterial = "phong";
+var lastMaterial = "";
 
 function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side, texture, bump) {
 
     const primitive = new THREE.Object3D();
 
     objectPhongMaterial = new THREE.MeshPhongMaterial({ color: color, wireframe: false, side: side, map: texture, bumpMap: bump });
-    objectLambMaterial = new THREE.MeshLambertMaterial({ color: color, wireframe: false, side: side, map: texture, bumpMap: bump });
-    
+    objectLambMaterial = new THREE.MeshLambertMaterial({ color: color, wireframe: false, side: side, map: texture });
+    objectBasicMaterial = new THREE.MeshBasicMaterial({ color: color, wireframe: false, side: side, map: texture });
+
     const _geometry = geometry;
     const mesh = new THREE.Mesh(_geometry, objectPhongMaterial);
 
@@ -66,6 +70,7 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
     primitive.add(mesh);
     primitive.castShadow = true;
 
+    textures.push(texture);
     objectMeshes.push(mesh);
     materials.push(objectPhongMaterial);
     materials.push(objectLambMaterial);
@@ -150,7 +155,6 @@ function resizeCameras() {
 function onWindowResize() {
     'use strict';
     resizeCameras();
-
 }
 
 function createOrigami1(x, y, z) {
@@ -160,6 +164,7 @@ function createOrigami1(x, y, z) {
 
     origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
     origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
 
     const geometry = new THREE.BufferGeometry();
 
@@ -291,6 +296,20 @@ function createObjects() {
 
 }
 
+function replaceMeshes(orimat, objmat){
+    
+    for(var i = 0; i < origamiMeshes.length; i++) {
+        origamiMeshes[i].material.dispose();
+        origamiMeshes[i].material = orimat;
+    }
+    for(var i = 0; i < objectMeshes.length; i++) {
+        objectMeshes[i].material.dispose();
+        objectMeshes[i].material = objmat;
+        objectMeshes[i].material.map = textures[i];
+        objectMeshes[i].material.needsUpdate = true;
+    }
+}
+
 function createScene() {
     'use strict';
 
@@ -326,30 +345,25 @@ function onKeyDown(e) {
             break;
         case 65: //A
         case 97: //a
-            var orimat, objmat;
-                
-            if (!isPhong) { orimat = origamiPhongMaterial; objmat = objectPhongMaterial; isPhong = 1; console.log("changed to phong\n")}
-            else if (isPhong) { orimat = origamiLambMaterial; objmat = objectLambMaterial; isPhong = 0 ; console.log("changed to lambert\n");}
-            
-            for(var i = 0; i < origamiMeshes.length; i++) {
-                origamiMeshes[i].material.dispose();
-                origamiMeshes[i].material = orimat;
+            if (activeMaterial == "lambert") {
+                replaceMeshes(origamiPhongMaterial, objectPhongMaterial);
+                activeMaterial = "phong"; 
             }
-            for(var i = 0; i < objectMeshes.length; i++) {
-                objectMeshes[i].material.dispose();
-                objectMeshes[i].material = objmat;
+            else if (activeMaterial == "phong") { 
+                replaceMeshes(origamiLambMaterial, objectLambMaterial);
+                activeMaterial = "lambert";
             }
             break;
-        case 68: //D
+        case 68:  //D
         case 100: //d
             dirLight.intensity = (dirLight.intensity == 0.8) ? 0 : 0.8;
             break;
-        case 90: //Z
-        case 122:
+        case 90:  //Z
+        case 122: //z
             spotLight1.intensity = (spotLight1.intensity == 0.7) ? 0 : 0.7;
             break;
-        case 88: //X
-        case 120:
+        case 88:  //X
+        case 120: //x
             spotLight2.intensity = (spotLight2.intensity == 0.7) ? 0 : 0.7;
             break;
         case 67: //C
@@ -370,6 +384,25 @@ function onKeyDown(e) {
         case 110: //n
             if (speed - speedDelta > minSpeed) {
                 speed -= speedDelta;
+            }
+            break;
+        case 83:  //S
+        case 115: //s
+            if (activeMaterial == "basic") {
+                if (lastMaterial == "phong") { 
+                    replaceMeshes(origamiPhongMaterial, objectPhongMaterial);
+                }
+                else if (lastMaterial == "lambert") {
+                    replaceMeshes(origamiLambMaterial, objectLambMaterial);
+                }
+                activeMaterial = lastMaterial;
+                lastMaterial = "basic";
+            }
+            else {
+                lastMaterial = activeMaterial;
+                replaceMeshes(origamiBasicMaterial, objectBasicMaterial);
+                activeMaterial = "basic";
+                console.log("changed to basic\n");
             }
             break;
         default:
