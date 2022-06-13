@@ -54,15 +54,11 @@ var dirLight, spotLight1, spotLight2, spotLight3;
 var bulb1, bulb2, bulb3;
 var origami1, origami2, origami3;
 
-<<<<<<< HEAD
 var activeMaterial = "phong";
 var lastMaterial = "";
-=======
 // Variables
 var chosenSpotlight, chosenBulb;
 var paused = false;
-var isPhong = 0;
->>>>>>> a72d7a82ba83af0c4dd8ef94477bff1125a88dbe
 
 function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side, texture, bump) {
 
@@ -70,10 +66,7 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
 
     objectPhongMaterial = new THREE.MeshPhongMaterial({ color: color, wireframe: false, side: side, map: texture, bumpMap: bump });
     objectLambMaterial = new THREE.MeshLambertMaterial({ color: color, wireframe: false, side: side, map: texture });
-<<<<<<< HEAD
     objectBasicMaterial = new THREE.MeshBasicMaterial({ color: color, wireframe: false, side: side, map: texture });
-=======
->>>>>>> a72d7a82ba83af0c4dd8ef94477bff1125a88dbe
 
     const _geometry = geometry;
     const mesh = new THREE.Mesh(_geometry, objectPhongMaterial);
@@ -397,7 +390,6 @@ function onKeyDown(e) {
 
         case 65: //A
         case 97: //a
-<<<<<<< HEAD
             if (activeMaterial == "lambert") {
                 replaceMeshes(origamiPhongMaterial, objectPhongMaterial);
                 activeMaterial = "phong"; 
@@ -407,33 +399,7 @@ function onKeyDown(e) {
                 activeMaterial = "lambert";
             }
             break;
-        case 68:  //D
-        case 100: //d
-            dirLight.intensity = (dirLight.intensity == 0.8) ? 0 : 0.8;
-            break;
-        case 90:  //Z
-        case 122: //z
-            spotLight1.intensity = (spotLight1.intensity == 0.7) ? 0 : 0.7;
-            break;
-        case 88:  //X
-        case 120: //x
-            spotLight2.intensity = (spotLight2.intensity == 0.7) ? 0 : 0.7;
-=======
-            var orimat, objmat;
-
-            if (!isPhong) { orimat = origamiPhongMaterial; objmat = objectPhongMaterial; isPhong = 1; console.log("changed to phong\n") }
-            else if (isPhong) { orimat = origamiLambMaterial; objmat = objectLambMaterial; isPhong = 0; console.log("changed to lambert\n"); }
-
-            for (var i = 0; i < origamiMeshes.length; i++) {
-                origamiMeshes[i].material.dispose();
-                origamiMeshes[i].material = orimat;
-            }
-            for (var i = 0; i < objectMeshes.length; i++) {
-                objectMeshes[i].material.dispose();
-                objectMeshes[i].material = objmat;
-            }
-            break;
-
+            
         /* ----- Lights ----- */
 
         case 68: //D
@@ -447,7 +413,6 @@ function onKeyDown(e) {
         case 88: //X
         case 120://x
             toggleSpotLight(spotLight2, bulb2);
->>>>>>> a72d7a82ba83af0c4dd8ef94477bff1125a88dbe
             break;
         case 67: //C
         case 99: //c
