@@ -12,6 +12,9 @@ const ARROWLEFT = 37;
 const HEIGHT = 12;
 const WIDTH = 20;
 const LENGTH = 100;
+const BASIC = 0;
+const PHONG = 1;
+const LAMBERT = 2;
 
 // Translaction
 var speed = 14;
@@ -38,8 +41,7 @@ var primitives = [];
 var lights = [];
 var keyPressed = [];
 var origamis = [];
-var origamiMeshes = [];
-var objectMeshes = [];
+var meshes = [];
 var textures = [];
 
 var origamiPhongMaterial;
@@ -54,11 +56,12 @@ var dirLight, spotLight1, spotLight2, spotLight3;
 var bulb1, bulb2, bulb3;
 var origami1, origami2, origami3;
 
-var activeMaterial = "phong";
-var lastMaterial = "";
 // Variables
 var chosenSpotlight, chosenBulb;
 var paused = false;
+var activeMaterial = PHONG;
+var lastMaterial = undefined;
+
 
 function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side, texture, bump) {
 
@@ -77,9 +80,10 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
     primitive.rotateZ(angleZ);
     primitive.add(mesh);
     primitive.castShadow = true;
+    primitive.receiveShadow = true;
 
     textures.push(texture);
-    objectMeshes.push(mesh);
+    meshes.push(mesh);
     materials.push(objectPhongMaterial);
     materials.push(objectLambMaterial);
     primitives.push(primitive);
@@ -89,7 +93,11 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
 
 }
 
-function whenPaused() {
+function whenPause() {
+
+}
+
+function whenResume() {
 
 }
 
@@ -100,8 +108,12 @@ function resetInitialState() {
         const obj = scene.children[i];
         scene.remove(obj);
     }
+    // Variables
     speed = 14;
     paused = false;
+    activeMaterial = PHONG;
+    lastMaterial = undefined;
+
     createScene();
     setupLights();
 }
@@ -119,6 +131,25 @@ function toggleSpotLight(spotLight, bulb) {
 
 }
 
+function toggleLightCalculation() {
+    'use strict';
+    if (activeMaterial == BASIC) {
+        if (lastMaterial == PHONG) {
+            replaceMeshes(origamiPhongMaterial, objectPhongMaterial);
+        }
+        else if (lastMaterial == LAMBERT) {
+            replaceMeshes(origamiLambMaterial, objectLambMaterial);
+        }
+        activeMaterial = lastMaterial;
+        lastMaterial = BASIC;
+    } else {
+        lastMaterial = activeMaterial;
+        replaceMeshes(origamiBasicMaterial, objectBasicMaterial);
+        activeMaterial = BASIC;
+        console.log("changed to basic\n");
+    }
+}
+
 function degreesToRadians(degrees) {
     return degrees * (Math.PI / 180);
 }
@@ -129,7 +160,6 @@ function createCamera(x, y, z) {
         window.innerWidth / window.innerHeight,
         1,
         1000);
-    // Position
     camera.position.x = x;
     camera.position.y = y;
     camera.position.z = z;
@@ -218,6 +248,8 @@ function createOrigami1(x, y, z) {
 
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 
+    // Duvida
+
     // const pointU = new THREE.Vector3(x, y + 5, z);
     // const pointR = new THREE.Vector3(x, y, z - 5);
     // const pointorigami3D = new THREE.Vector3(x, y - 5, z);
@@ -230,7 +262,7 @@ function createOrigami1(x, y, z) {
 
     const mesh = new THREE.Mesh(geometry, origamiPhongMaterial);
 
-    origamiMeshes.push(mesh);
+    meshes.push(mesh);
 
     orig1.add(mesh);
     materials.push(origamiPhongMaterial);
@@ -261,7 +293,7 @@ function createObjects() {
         new THREE.BoxGeometry(1.5 * WIDTH, HEIGHT, LENGTH, 25, 25), THREE.DoubleSide,
         textureLoader.load('../textures/wood.jpg'), null);
 
-    // TODO: VER SHADOWS DOS OBJECTOS
+    // Duvida: VER SHADOWS DOS OBJECTOS
     bottom.castShadow = false;
     bottom.receiveShadow = true;
 
@@ -336,17 +368,20 @@ function createObjects() {
 
 }
 
-function replaceMeshes(orimat, objmat){
-    
-    for(var i = 0; i < origamiMeshes.length; i++) {
-        origamiMeshes[i].material.dispose();
-        origamiMeshes[i].material = orimat;
-    }
-    for(var i = 0; i < objectMeshes.length; i++) {
-        objectMeshes[i].material.dispose();
-        objectMeshes[i].material = objmat;
-        objectMeshes[i].material.map = textures[i];
-        objectMeshes[i].material.needsUpdate = true;
+function replaceMeshes() {
+
+    for (var i = 0; i < meshes.length; i++) {
+        meshes[i].material.dispose();
+        if (activeMaterial == LAMBERT) {
+            meshes[i].material = materials[2 * i];
+            // meshes[i].material.map = textures[i];
+            activeMaterial == PHONG;
+        } else if (activeMaterial == PHONG) {
+            meshes[i].material = materials[2 * i + 1];
+            // meshes[i].material.map = textures[i];
+            activeMaterial == LAMBERT;
+        }
+        meshes[i].material.needsUpdate = true;
     }
 }
 
@@ -390,16 +425,15 @@ function onKeyDown(e) {
 
         case 65: //A
         case 97: //a
-            if (activeMaterial == "lambert") {
+            if (activeMaterial == LAMBERT) {
                 replaceMeshes(origamiPhongMaterial, objectPhongMaterial);
-                activeMaterial = "phong"; 
-            }
-            else if (activeMaterial == "phong") { 
+                activeMaterial = PHONG;
+            } else if (activeMaterial == PHONG) {
                 replaceMeshes(origamiLambMaterial, objectLambMaterial);
-                activeMaterial = "lambert";
+                activeMaterial = LAMBERT;
             }
             break;
-            
+
         /* ----- Lights ----- */
 
         case 68: //D
@@ -420,8 +454,9 @@ function onKeyDown(e) {
             break;
         case 83: //S
         case 115: //s
-            paused = true;
-            whenPaused();
+            paused = (!paused) ? true : false;
+            if (!paused) whenResume();
+            if (paused) whenPause();
             break;
         case 79: //O
         case 111://o
@@ -446,24 +481,9 @@ function onKeyDown(e) {
                 speed -= speedDelta;
             }
             break;
-        case 83:  //S
-        case 115: //s
-            if (activeMaterial == "basic") {
-                if (lastMaterial == "phong") { 
-                    replaceMeshes(origamiPhongMaterial, objectPhongMaterial);
-                }
-                else if (lastMaterial == "lambert") {
-                    replaceMeshes(origamiLambMaterial, objectLambMaterial);
-                }
-                activeMaterial = lastMaterial;
-                lastMaterial = "basic";
-            }
-            else {
-                lastMaterial = activeMaterial;
-                replaceMeshes(origamiBasicMaterial, objectBasicMaterial);
-                activeMaterial = "basic";
-                console.log("changed to basic\n");
-            }
+        case 80:  //P
+        case 112: //p
+            toggleLightCalculation();
             break;
         default:
             break;
@@ -544,7 +564,7 @@ function init() {
 
 }
 
-function flutatingAnimation() {
+function fluctuatingAnimation() {
 
     const time = clock.getElapsedTime();
 
@@ -562,7 +582,7 @@ function animate() {
         var clockDelta = clock.getDelta();
         const rotationStep = deltaAngle * speed * clockDelta;
 
-        flutatingAnimation();
+        fluctuatingAnimation();
 
         // Rotation
         if (keyPressed[81] == true || keyPressed[113] == true) { //Q or q
