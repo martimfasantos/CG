@@ -290,9 +290,9 @@ function createOrigami1(x, y, z) {
         x, y, z - size,
         x, y + size, z,
 
-        x, y - size, z,
-        x, y, z + size,
         x, y + size, z,
+        x, y, z + size,
+        x, y - size, z,
     ]);
 
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
@@ -321,6 +321,42 @@ function createOrigami1(x, y, z) {
 
     return orig1;
 
+}
+
+function createOrigami2(x, y, z) {
+
+    const orig2 = new THREE.Object3D();
+    const size = 5;
+
+    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
+    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+
+    const geometry = new THREE.BufferGeometry();
+
+    const vertices = new Float32Array([
+        x, y - size, z,
+        x, y + size/3, z - size/3,
+        x, y + size, z,
+
+        x, y + size, z,
+        x, y + size/3, z + size/3,
+        x, y - size, z,
+    ]);
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+    const mesh = new THREE.Mesh(geometry, origamiPhongMaterial);
+
+    meshes.push(mesh);
+
+    orig2.add(mesh);
+    materials.push(origamiPhongMaterial);
+    materials.push(origamiLambMaterial);
+    primitives.push(orig2);
+    scene.add(orig2);
+
+    return orig2;
 }
 
 function createObjects() {
@@ -397,14 +433,16 @@ function createObjects() {
 
     // Origamis
 
-    // origami1 = createOrigami1(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8);
+    origami1 = createOrigami1(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8);
 
-    origami1 = createPrimitive(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8, 0, 0, 0, null,
+    origami2 = createOrigami2(0, 1.1 * HEIGHT, 0);
+        
+    /*origami1 = createPrimitive(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8, 0, 0, 0, null,
         new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
         textureLoader.load('../textures/wood.jpg'), null);
     origami2 = createPrimitive(0, 1.1 * HEIGHT, 0, 0, 0, 0, null,
         new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
-        textureLoader.load('../textures/wood.jpg'), null);
+        textureLoader.load('../textures/wood.jpg'), null);*/
     origami3 = createPrimitive(0, 1.1 * HEIGHT, -LENGTH / 2 + LENGTH / 8, 0, 0, 0, null,
         new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
         textureLoader.load('../textures/wood.jpg'), null);
