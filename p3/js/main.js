@@ -27,7 +27,6 @@ const speedDelta = 2;
 var orthographicCamera, perspectiveCamera, pausedCamera;
 const cameraDist = 35;
 const cameraOffset = 10;
-const screenArea = screen.width * screen.height;
 const viewSize = 90;
 
 // Lights
@@ -44,17 +43,11 @@ var origamis = [];
 var meshes = [];
 var textures = [];
 
-var origamiPhongMaterial;
-var objectPhongMaterial;
-var origamiLambMaterial;
-var objectLambMaterial;
-var origamiBasicMaterial;
-var objectBasicMaterial;
-
 // Objects
 var dirLight, spotLight1, spotLight2, spotLight3;
 var bulb1, bulb2, bulb3;
 var origami1, origami2, origami3;
+var pauseScreen;
 
 // Variables
 var chosenSpotlight, chosenBulb;
@@ -67,55 +60,114 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
 
     const primitive = new THREE.Object3D();
 
-    objectPhongMaterial = new THREE.MeshPhongMaterial({ color: color, wireframe: false, side: side, map: texture, bumpMap: bump });
-    objectLambMaterial = new THREE.MeshLambertMaterial({ color: color, wireframe: false, side: side, map: texture });
-    objectBasicMaterial = new THREE.MeshBasicMaterial({ color: color, wireframe: false, side: side, map: texture });
+    const phongMaterial = new THREE.MeshPhongMaterial({ color: color, wireframe: false, side: side, map: texture, bumpMap: bump });
+    const lambMaterial = new THREE.MeshLambertMaterial({ color: color, wireframe: false, side: side, map: texture });
+    const basicMaterial = new THREE.MeshBasicMaterial({ color: color, wireframe: false, side: side, map: texture });
 
     const _geometry = geometry;
-    const mesh = new THREE.Mesh(_geometry, objectPhongMaterial);
+    const mesh = new THREE.Mesh(_geometry, phongMaterial);
 
     primitive.position.set(x, y, z);
     primitive.rotateX(angleX);
     primitive.rotateY(angleY);
     primitive.rotateZ(angleZ);
     primitive.add(mesh);
+
+    // Sombra
     primitive.castShadow = true;
     primitive.receiveShadow = true;
 
     textures.push(texture);
     meshes.push(mesh);
-    materials.push(objectPhongMaterial);
-    materials.push(objectLambMaterial);
+    materials.push(phongMaterial);
+    materials.push(lambMaterial);
+    materials.push(basicMaterial);
     primitives.push(primitive);
+
+    primitive.userData = {
+        initialPos: new THREE.Vector3(x, y, z),
+        initialRot: new THREE.Vector3(angleX, angleY, angleZ),
+        initialText: texture
+    }
     scene.add(primitive);
 
     return primitive;
 
 }
 
-function whenPause() {
+function createPauseScreen() {
 
+    const plane = new THREE.Object3D();
+
+    const material = new THREE.MeshBasicMaterial({
+        color: 0xFFFFFF,
+        map: new THREE.TextureLoader().load('../textures/paused.jpg'),
+        transparent: true,
+        opacity: 0.6
+    });
+
+    const geometry = new THREE.PlaneGeometry(6, 5);
+    const mesh = new THREE.Mesh(geometry, material);
+
+    plane.position.set(camera.position.x - 2, camera.position.y, camera.position.z);
+    plane.add(mesh);
+    plane.rotation.y = Math.PI / 2;
+
+    scene.add(plane);
+
+    return plane;
+}
+
+function whenPause() {
+    pauseScreen = createPauseScreen();
 }
 
 function whenResume() {
+    scene.remove(pauseScreen);
+    pauseScreen = undefined;
 
 }
 
-// Duvida: é suposto fazer isto assim?? criar os objetos todos novamente
 function resetInitialState() {
     'use strict';
-    for (var i = 0; i < scene.children.length; i++) {
-        const obj = scene.children[i];
-        scene.remove(obj);
-    }
-    // Variables
+    // Remove added objects
+    scene.remove(pauseScreen);
+
+    // Reset variables
+    clock.start();
     speed = 14;
     paused = false;
     activeMaterial = PHONG;
     lastMaterial = undefined;
 
-    createScene();
-    setupLights();
+    // Reset initial parameters for every primitive / origami
+    for (var i = 0; i < primitives.length; i++) {
+        // Position
+        primitives[i].position.x = primitives[i].userData.initialPos.x;
+        primitives[i].position.y = primitives[i].userData.initialPos.y;
+        primitives[i].position.z = primitives[i].userData.initialPos.z;
+
+        // Rotation
+        primitives[i].rotation.x = primitives[i].userData.initialRot.x;
+        primitives[i].rotation.y = primitives[i].userData.initialRot.y;
+        primitives[i].rotation.z = primitives[i].userData.initialRot.z;
+
+        // Meshes
+        meshes[i].material.dispose();
+        meshes[i].material = materials[3 * i];
+        meshes[i].material.map = primitives[i].userData.initialText;
+        meshes[i].material.needsUpdate = true;
+    }
+
+    // Reset lights
+    for (var i = 0; i < lights.length; i++) {
+        if (lights[i].isDirectionalLight) {
+            lights[i].intensity = dirLightIntensity;
+        } else {
+            lights[i].intensity = spotLightIntensity;
+        }
+    }
+
 }
 
 function toggleSpotLight(spotLight, bulb) {
@@ -148,10 +200,6 @@ function toggleLightCalculation() {
         activeMaterial = BASIC;
         console.log("changed to basic\n");
     }
-}
-
-function degreesToRadians(degrees) {
-    return degrees * (Math.PI / 180);
 }
 
 function createCamera(x, y, z) {
@@ -279,12 +327,10 @@ function createObjects() {
     const textureLoader = new THREE.TextureLoader();
 
     // Floor
-    const floor = createPrimitive(0, 0, 0, 0, 0, 0, null,
+    const floor = createPrimitive(0, 0, 0, Math.PI / 2, 0, 0, null,
         new THREE.PlaneGeometry(200, 200, 100, 100), THREE.DoubleSide,
         textureLoader.load('../textures/cobblestone.jpg'),
         textureLoader.load('../textures/cobblestone_bump.jpg'));
-    floor.rotation.x = Math.PI / 2;
-
 
     // --------------------------------
 
@@ -308,10 +354,9 @@ function createObjects() {
     // Spotlights
 
     /* --- Support --- */
-    const support = createPrimitive(0, 4 * HEIGHT + 2, 0, 0, 0, 0, null,
+    const support = createPrimitive(0, 4 * HEIGHT + 2, 0, Math.PI / 2, 0, 0, null,
         new THREE.CylinderGeometry(0.3, 0.3, LENGTH), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
-    support.rotation.x = Math.PI / 2;
     createPrimitive(0, (4 * HEIGHT + 2) / 2, LENGTH / 2, 0, 0, 0, null,
         new THREE.CylinderGeometry(0.3, 0.3, 4 * HEIGHT + 2), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
@@ -373,11 +418,11 @@ function replaceMeshes() {
     for (var i = 0; i < meshes.length; i++) {
         meshes[i].material.dispose();
         if (activeMaterial == LAMBERT) {
-            meshes[i].material = materials[2 * i];
+            meshes[i].material = materials[3 * i];
             // meshes[i].material.map = textures[i];
             activeMaterial == PHONG;
         } else if (activeMaterial == PHONG) {
-            meshes[i].material = materials[2 * i + 1];
+            meshes[i].material = materials[3 * i + 1];
             // meshes[i].material.map = textures[i];
             activeMaterial == LAMBERT;
         }
@@ -425,13 +470,7 @@ function onKeyDown(e) {
 
         case 65: //A
         case 97: //a
-            if (activeMaterial == LAMBERT) {
-                replaceMeshes(origamiPhongMaterial, objectPhongMaterial);
-                activeMaterial = PHONG;
-            } else if (activeMaterial == PHONG) {
-                replaceMeshes(origamiLambMaterial, objectLambMaterial);
-                activeMaterial = LAMBERT;
-            }
+            replaceMeshes();
             break;
 
         /* ----- Lights ----- */
