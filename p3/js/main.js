@@ -585,12 +585,16 @@ function init() {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
 
+    renderer.xr.enabled = true;
+
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     document.body.appendChild(renderer.domElement);
+
+    document.body.appendChild( VRButton.createButton( renderer ) );
 
     createScenes();
     setupLights();
@@ -660,6 +664,6 @@ function animate() {
 
     render();
 
-    requestAnimationFrame(animate);
+    renderer.setAnimationLoop(animate);
 
 }
