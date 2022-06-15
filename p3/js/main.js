@@ -1,6 +1,6 @@
 /* global THREE */
 
-var camera, scene, renderer;
+var camera, pauseCamera, scene, pauseScene, renderer;
 var worldAxisHelper;
 const clock = new THREE.Clock();
 
@@ -15,6 +15,8 @@ const LENGTH = 100;
 const BASIC = 0;
 const PHONG = 1;
 const LAMBERT = 2;
+const ON = 1;
+const OFF = 0;
 
 // Translaction
 var speed = 14;
@@ -46,12 +48,13 @@ var textures = [];
 // Objects
 var dirLight, spotLight1, spotLight2, spotLight3;
 var bulb1, bulb2, bulb3;
+var podium;
 var origami1, origami2, origami3;
 var pauseScreen;
 
 // Variables
 var chosenSpotlight, chosenBulb;
-var paused = false;
+var isPaused = false;
 var activeMaterial = PHONG;
 var lastMaterial = undefined;
 
@@ -102,41 +105,37 @@ function createPauseScreen() {
     const material = new THREE.MeshBasicMaterial({
         color: 0xFFFFFF,
         map: new THREE.TextureLoader().load('../textures/paused.jpg'),
-        transparent: true,
-        opacity: 0.6
+        // transparent: true,
+        // opacity: 
     });
 
     const geometry = new THREE.PlaneGeometry(6, 5);
     const mesh = new THREE.Mesh(geometry, material);
 
-    plane.position.set(camera.position.x - 2, camera.position.y, camera.position.z);
+    plane.position.set(0, 0, 0);
     plane.add(mesh);
     plane.rotation.y = Math.PI / 2;
 
-    scene.add(plane);
+    pauseScene.add(plane);
 
     return plane;
 }
 
 function whenPause() {
-    pauseScreen = createPauseScreen();
+
 }
 
 function whenResume() {
-    scene.remove(pauseScreen);
-    pauseScreen = undefined;
 
 }
 
 function resetInitialState() {
     'use strict';
-    // Remove added objects
-    scene.remove(pauseScreen);
 
     // Reset variables
     clock.start();
     speed = 14;
-    paused = false;
+    isPaused = false;
     activeMaterial = PHONG;
     lastMaterial = undefined;
 
@@ -185,18 +184,18 @@ function toggleSpotLight(spotLight, bulb) {
 
 function toggleLightCalculation() {
     'use strict';
+    // Light calculation ON
     if (activeMaterial == BASIC) {
         if (lastMaterial == PHONG) {
-            replaceMeshes(origamiPhongMaterial, objectPhongMaterial);
-        }
-        else if (lastMaterial == LAMBERT) {
-            replaceMeshes(origamiLambMaterial, objectLambMaterial);
+            replaceMeshes(PHONG);
+        } else if (lastMaterial == LAMBERT) {
+            replaceMeshes(LAMBERT);
         }
         activeMaterial = lastMaterial;
         lastMaterial = BASIC;
-    } else {
+    } else { // Light calculation OFF
+        replaceMeshes(BASIC);
         lastMaterial = activeMaterial;
-        replaceMeshes(origamiBasicMaterial, objectBasicMaterial);
         activeMaterial = BASIC;
         console.log("changed to basic\n");
     }
@@ -233,6 +232,8 @@ function createOrthographicCamera(x, y, z) {
     orthoCamera.position.x = x;
     orthoCamera.position.y = y;
     orthoCamera.position.z = z;
+    orthoCamera.zoom = 1.7;
+    orthoCamera.updateProjectionMatrix();
 
     orthoCamera.lookAt(scene.position);
 
@@ -327,7 +328,7 @@ function createObjects() {
     const textureLoader = new THREE.TextureLoader();
 
     // Floor
-    const floor = createPrimitive(0, 0, 0, Math.PI / 2, 0, 0, null,
+    createPrimitive(0, 0, 0, Math.PI / 2, 0, 0, null,
         new THREE.PlaneGeometry(200, 200, 100, 100), THREE.DoubleSide,
         textureLoader.load('../textures/cobblestone.jpg'),
         textureLoader.load('../textures/cobblestone_bump.jpg'));
@@ -335,17 +336,19 @@ function createObjects() {
     // --------------------------------
 
     // Podium
-    const bottom = createPrimitive(0, 0, 0, 0, 0, 0, null,
-        new THREE.BoxGeometry(1.5 * WIDTH, HEIGHT, LENGTH, 25, 25), THREE.DoubleSide,
-        textureLoader.load('../textures/wood.jpg'), null);
+
+    podium = new THREE.Object3D()
+        .add(createPrimitive(0, 0, 0, 0, 0, 0, null,
+            new THREE.BoxGeometry(1.5 * WIDTH, HEIGHT, LENGTH, 25, 25), THREE.DoubleSide,
+            textureLoader.load('../textures/wood.jpg'), null))
+        .add(createPrimitive(-1.25 * WIDTH, HEIGHT, 0, 0, 0, 0, null,
+            new THREE.BoxGeometry(WIDTH, 3 * HEIGHT, LENGTH, 25, 25), THREE.DoubleSide,
+            textureLoader.load('../textures/wood.jpg'), null))
+    scene.add(podium);
 
     // Duvida: VER SHADOWS DOS OBJECTOS
-    bottom.castShadow = false;
-    bottom.receiveShadow = true;
-
-    createPrimitive(-1.25 * WIDTH, HEIGHT, 0, 0, 0, 0, null,
-        new THREE.BoxGeometry(WIDTH, 3 * HEIGHT, LENGTH, 25, 25), THREE.DoubleSide,
-        textureLoader.load('../textures/wood.jpg'), null);
+    podium.castShadow = false;
+    podium.receiveShadow = true;
 
     // add bump map and displacement map
 
@@ -354,13 +357,13 @@ function createObjects() {
     // Spotlights
 
     /* --- Support --- */
-    const support = createPrimitive(0, 4 * HEIGHT + 2, 0, Math.PI / 2, 0, 0, null,
+    createPrimitive(0, 4 * HEIGHT + 2, 0, Math.PI / 2, 0, 0, null,
         new THREE.CylinderGeometry(0.3, 0.3, LENGTH), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
-    createPrimitive(0, (4 * HEIGHT + 2) / 2, LENGTH / 2, 0, 0, 0, null,
+    createPrimitive(0, (4 * HEIGHT + 2) / 2, LENGTH / 2 + 0.3, 0, 0, 0, null,
         new THREE.CylinderGeometry(0.3, 0.3, 4 * HEIGHT + 2), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
-    createPrimitive(0, (4 * HEIGHT + 2) / 2, -LENGTH / 2, 0, 0, 0, null,
+    createPrimitive(0, (4 * HEIGHT + 2) / 2, -LENGTH / 2 - 0.3, 0, 0, 0, null,
         new THREE.CylinderGeometry(0.3, 0.3, 4 * HEIGHT + 2), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
 
@@ -408,32 +411,28 @@ function createObjects() {
 
     // --------------------------------
 
-
-    // --------------------------------
-
 }
 
-function replaceMeshes() {
+function replaceMeshes(material) {
 
     for (var i = 0; i < meshes.length; i++) {
         meshes[i].material.dispose();
-        if (activeMaterial == LAMBERT) {
+        if (material == LAMBERT) {
             meshes[i].material = materials[3 * i];
-            // meshes[i].material.map = textures[i];
-            activeMaterial == PHONG;
-        } else if (activeMaterial == PHONG) {
+        } else if (material == PHONG) {
             meshes[i].material = materials[3 * i + 1];
-            // meshes[i].material.map = textures[i];
-            activeMaterial == LAMBERT;
+        } else if (material == BASIC) {
+            meshes[i].material = materials[3 * i + 2];
         }
         meshes[i].material.needsUpdate = true;
     }
 }
 
-function createScene() {
+function createScenes() {
     'use strict';
 
     scene = new THREE.Scene();
+    pauseScene = new THREE.Scene();
 
     worldAxisHelper = new THREE.AxesHelper(25);
     worldAxisHelper.visible = false;
@@ -458,19 +457,17 @@ function onKeyDown(e) {
         case 50: //2
             camera = orthographicCamera;
             break;
-        case 51: //3
-            // camera = rocketCamera;
-            break;
         case 52: //4
             for (var i = 0; i < materials.length; i++) {
                 materials[i].wireframe = !materials[i].wireframe;
             }
             break;
 
-
         case 65: //A
         case 97: //a
-            replaceMeshes();
+            const newMaterial = (activeMaterial == PHONG) ? LAMBERT : PHONG;
+            replaceMeshes(newMaterial);
+            activeMaterial = newMaterial;
             break;
 
         /* ----- Lights ----- */
@@ -493,13 +490,20 @@ function onKeyDown(e) {
             break;
         case 83: //S
         case 115: //s
-            paused = (!paused) ? true : false;
-            if (!paused) whenResume();
-            if (paused) whenPause();
+            toggleLightCalculation();
             break;
         case 79: //O
         case 111://o
-            if (paused) resetInitialState();
+            if (isPaused) resetInitialState();
+            break;
+
+        /* ----- Pause / Resume / Reset ----- */
+
+        case 32:  //Space
+            isPaused = (!isPaused) ? true : false;
+            break;
+        case 51:  //3
+            if (isPaused) resetInitialState();
             break;
 
         /* ----- Others ----- */
@@ -520,10 +524,6 @@ function onKeyDown(e) {
                 speed -= speedDelta;
             }
             break;
-        case 80:  //P
-        case 112: //p
-            toggleLightCalculation();
-            break;
         default:
             break;
     }
@@ -536,13 +536,22 @@ function onKeyUp(e) {
 
 function render() {
     'use strict';
+    renderer.autoClear = false;
+    renderer.clear();
     renderer.render(scene, camera);
+    if (isPaused) {
+        renderer.clearDepth();
+        renderer.render(pauseScene, pauseCamera);
+    }
 }
 
 function setupLights() {
     'use strict';
     const ambLight = new THREE.AmbientLight(0xF7F7F7, 0.3);
     scene.add(ambLight);
+
+    const ambLightPause = new THREE.AmbientLight(0xF7F7F7, 0.3);
+    pauseScene.add(ambLightPause);
 
     // Directional Light
     dirLight = new THREE.DirectionalLight(0xFFFFFF, dirLightIntensity);
@@ -583,18 +592,22 @@ function init() {
 
     document.body.appendChild(renderer.domElement);
 
-    createScene();
-
+    createScenes();
     setupLights();
 
     // Cameras
-    orthographicCamera = createOrthographicCamera(0, 0, cameraDist);
+    perspectiveCamera = createCamera(2 * cameraDist, 3 * cameraDist / 4, 0);
+    scene.add(perspectiveCamera);
+    orthographicCamera = createOrthographicCamera(3 * cameraDist, cameraDist, 0);
+    orthographicCamera.lookAt(podium.position.x, podium.position.y + cameraDist / 2.1, podium.position.z)
     scene.add(orthographicCamera);
 
-    perspectiveCamera = createCamera(2 * cameraDist, cameraDist / 2, 0);
-    scene.add(perspectiveCamera);
-
     camera = perspectiveCamera;
+
+    pauseCamera = createOrthographicCamera(0, 0, 4 * cameraDist);
+    pauseCamera.lookAt(pauseScene);
+    pauseScene.add(pauseCamera);
+    createPauseScreen();
 
     // Events
     window.addEventListener("keydown", onKeyDown);
@@ -616,7 +629,7 @@ function fluctuatingAnimation() {
 function animate() {
     'use strict';
 
-    if (!paused) {
+    if (!isPaused) {
 
         var clockDelta = clock.getDelta();
         const rotationStep = deltaAngle * speed * clockDelta;
