@@ -50,7 +50,6 @@ var dirLight, spotLight1, spotLight2, spotLight3;
 var bulb1, bulb2, bulb3;
 var podium;
 var origami1, origami2, origami3;
-var pauseScreen;
 
 // Variables
 var chosenSpotlight, chosenBulb;
@@ -105,28 +104,18 @@ function createPauseScreen() {
     const material = new THREE.MeshBasicMaterial({
         color: 0xFFFFFF,
         map: new THREE.TextureLoader().load('../textures/paused.jpg'),
-        // transparent: true,
-        // opacity: 
+        transparent: true,
+        opacity: 0.6
     });
 
-    const geometry = new THREE.PlaneGeometry(6, 5);
+    const geometry = new THREE.PlaneGeometry(100, 60);
     const mesh = new THREE.Mesh(geometry, material);
 
-    plane.position.set(0, 0, 0);
+    plane.position.set(0, 1.5 * HEIGHT, 0);
     plane.add(mesh);
     plane.rotation.y = Math.PI / 2;
 
     pauseScene.add(plane);
-
-    return plane;
-}
-
-function whenPause() {
-
-}
-
-function whenResume() {
-
 }
 
 function resetInitialState() {
@@ -770,8 +759,8 @@ function init() {
 
     camera = perspectiveCamera;
 
-    pauseCamera = createOrthographicCamera(0, 0, 4 * cameraDist);
-    pauseCamera.lookAt(pauseScene);
+    pauseCamera = createOrthographicCamera(10 * cameraDist, 0, 0);
+    pauseCamera.lookAt(podium.position.x, podium.position.y + cameraDist / 2.1, podium.position.z);
     pauseScene.add(pauseCamera);
     createPauseScreen();
 
