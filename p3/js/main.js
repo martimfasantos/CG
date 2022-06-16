@@ -409,18 +409,27 @@ function createOrigami2(x, y, z, texture) {
         scale / 10, -scale, 0,
 
 
-    ]);
+    ]);*/
+    
+    ]).map(x => x * scale);
     
     const uvs = new Float32Array([
         0.75,0.75, 0,0.25, 0,0,
 
         0,0, 0.25,0, 0.75,0.75,
+
+        0,0, 0.25,0, 0.75,0.75,
+
+        0,0, 0.25,0, 0.75,0.75,
+
+        0,0, 0.25,0, 0.75,0.75,
+
+        0,0, 0.25,0, 0.75,0.75,
+
+        0,0, 0.25,0, 0.75,0.75,
+
+        0,0, 0.25,0, 0.75,0.75,
     ]);
-        
-        */
-
-
-    ]).map(x => x * scale);
 
     geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
@@ -561,6 +570,10 @@ function createOrigami3(x, y, z, texture) {
         1,0,   0,1,     0,0,
 
         //BODY
+        0,0,   0.5,0.5, 0.5,0,
+        0,0,   0.5,0,   0, 0.5,
+        1,0,   0,1,     0,0,
+        0,0,   1,1,     0,1,
         0,0,   0.5,0.5, 0.5,0,
         0,0,   0.5,0,   0, 0.5,
         1,0,   0,1,     0,0,
