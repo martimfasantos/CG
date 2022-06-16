@@ -279,9 +279,9 @@ function createOrigami1(x, y, z) {
     const orig1 = new THREE.Object3D();
     const scale = 7;
 
-    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
-    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
-    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
+    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
+    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
 
     const geometry = new THREE.BufferGeometry();
 
@@ -322,9 +322,9 @@ function createOrigami2(x, y, z) {
     const orig2 = new THREE.Object3D();
     const scale = 7;
 
-    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
-    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
-    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
+    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
+    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
 
     const geometry = new THREE.BufferGeometry();
 
@@ -368,9 +368,9 @@ function createOrigami3(x, y, z) {
     const orig3 = new THREE.Object3D();
     const scale = 1.2;
 
-    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
-    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
-    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
+    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
+    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
 
     var geometry = new THREE.BufferGeometry();
 
@@ -397,26 +397,22 @@ function createOrigami3(x, y, z) {
         1.6, 0, 3.2,
         0.8, 12, 3.6,
 
-        // Body (EFK, FGK, KGJ, GHJ, JHI)
+        // Body (EFJ, FGJ, GHJ, EHI)
 
         0, 2.8, 5.8,
         1.6, 0, 3.2,
-        0, 3.8, 3.2,
+        1.6, 4.6, -1.8,
 
         1.6, 0, 3.2,
-        2.2, 0, -0.9,
-        0, 3.8, 3.2,
+        2.4, 0, -0.9,
+        1.6, 4.6, -1.8,
 
-        0, 3.8, 3.2,
-        2.2, 0, -0.9,
-        0, 4.6, -1.8,
+        2.4, 0, -0.9,
+        3, 0, -4.7,
+        1.6, 4.6, -1.8,
 
-        2.2, 0, -0.9,
-        2.8, 0, -4.7,
-        0, 4.6, -1.8,
-
-        0, 4.6, -1.8,
-        2.8, 0, -4.7,
+        0, 2.8, 5.8,
+        3, 0, -4.7,
         0, 6, -8.7,
 
         /* ------ Points -------
@@ -427,13 +423,14 @@ function createOrigami3(x, y, z) {
         D = (0, 11.5, 4.9)
         E = (0, 2.8, 5.8)
         F = (1.6, 0, 3.2)
-        G = (2.2, 0, -0.9)
-        H = (2.8, 0, -4.7)
+        X = (1.6, 0, 3.2)
+        G = (2.4, 0, -0.9)
+        H = (3, 0, -4.7)
         I = (0, 6, -8.7)
-        J = (0, 4.6, -1.8)
+        J = (1.6, 4.6, -1.8)
         K = (0, 3.8, 3.2)
         L = (-2.8, 0, -4.7)
-        M = (-2.2, 0, -0.9)
+        M = (-2.4, 0, -0.9)
         N = (-1,6, 0, 3.2)
         O = (-0.5, 12, 3.6)
         
@@ -442,13 +439,16 @@ function createOrigami3(x, y, z) {
     ]).map(x => x * scale);
 
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    const mirror = geometry.clone().applyMatrix4(new THREE.Matrix4().makeScale(-1, 1, 1));
+
+    // geometry.merge(mirror);
+
     geometry.computeVertexNormals();
 
     orig3.position.set(x, y, z);
     orig3.castShadow = true;
 
     const mesh = new THREE.Mesh(geometry, origamiPhongMaterial);
-    const mirror = mesh.clone().applyMatrix4(new THREE.Matrix4().makeScale(1, 1, -1));
 
     //     var blueMaterial = new THREE.MeshPhongMaterial( {color: 0x0000FF } );
     // var redMaterial = new THREE.MeshPhongMaterial({ color:0xFF0000 });
@@ -471,7 +471,7 @@ function createOrigami3(x, y, z) {
     // scene.add( mesh );
 
     orig3.add(mesh);
-    orig3.add(mirror);
+    // orig3.add(mirror);
     //orig3.scale.multiply(new THREE.Vector3(1, 1, -1));
 
     meshes.push(mesh);
