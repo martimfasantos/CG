@@ -277,7 +277,7 @@ function onWindowResize() {
 function createOrigami1(x, y, z) {
 
     const orig1 = new THREE.Object3D();
-    const size = 5;
+    const scale = 7;
 
     origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
     origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
@@ -286,37 +286,31 @@ function createOrigami1(x, y, z) {
     const geometry = new THREE.BufferGeometry();
 
     const vertices = new Float32Array([
-        x, y - size, z,
-        x, y, z - size,
-        x, y + size, z,
+        0, scale, 0,
+        -scale / 10, 0, scale,
+        scale / 10, -scale, 0,
 
-        x, y + size, z,
-        x, y, z + size,
-        x, y - size, z,
+        scale / 10, -scale, 0,
+        -scale / 10, 0, -scale,
+        0, scale, 0,
     ]);
 
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geometry.computeVertexNormals();
 
-    // Duvida
-
-    // const pointU = new THREE.Vector3(x, y + 5, z);
-    // const pointR = new THREE.Vector3(x, y, z - 5);
-    // const pointorigami3D = new THREE.Vector3(x, y - 5, z);
-    // const pointL = new THREE.Vector3(x, y, z + 5);
-
-    // const face1 = new THREE.Face(pointD, pointR, pointU);
-    // origami1.add(face1);
-    // const face2 = new THREE.Face(pointD, pointL, pointU);
-    // origami1.add(face2);
+    orig1.position.set(x, y, z);
+    orig1.castShadow = true;
 
     const mesh = new THREE.Mesh(geometry, origamiPhongMaterial);
 
-    meshes.push(mesh);
-
     orig1.add(mesh);
+
+    meshes.push(mesh);
     materials.push(origamiPhongMaterial);
     materials.push(origamiLambMaterial);
+    materials.push(origamiBasicMaterial);
     primitives.push(orig1);
+
     scene.add(orig1);
 
     return orig1;
@@ -326,7 +320,7 @@ function createOrigami1(x, y, z) {
 function createOrigami2(x, y, z) {
 
     const orig2 = new THREE.Object3D();
-    const size = 5;
+    const scale = 7;
 
     origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
     origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
@@ -335,16 +329,24 @@ function createOrigami2(x, y, z) {
     const geometry = new THREE.BufferGeometry();
 
     const vertices = new Float32Array([
-        x, y - size, z,
-        x, y + size/3, z - size/3,
-        x, y + size, z,
 
-        x, y + size, z,
-        x, y + size/3, z + size/3,
-        x, y - size, z,
+
+        scale / 10, -scale, 0,
+        -scale / 10, scale / 4, -scale / 2,
+        0, scale, 0,
+
+        0, scale, 0,
+        -scale / 10, scale / 4, scale / 2,
+        scale / 10, -scale, 0,
+
+
     ]);
 
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geometry.computeVertexNormals();
+
+    orig2.position.set(x, y, z);
+    orig2.castShadow = true;
 
     const mesh = new THREE.Mesh(geometry, origamiPhongMaterial);
 
@@ -353,11 +355,137 @@ function createOrigami2(x, y, z) {
     orig2.add(mesh);
     materials.push(origamiPhongMaterial);
     materials.push(origamiLambMaterial);
+    materials.push(origamiBasicMaterial);
     primitives.push(orig2);
     scene.add(orig2);
 
     return orig2;
+
 }
+
+function createOrigami3(x, y, z) {
+
+    const orig3 = new THREE.Object3D();
+    const scale = 1.2;
+
+    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
+    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+
+    var geometry = new THREE.BufferGeometry();
+
+    const vertices = new Float32Array([
+
+        // TODO: AJUSTAR PONTOS
+
+        // Head (ACB)
+        0, 10.4, 8.6,
+        0.8, 12, 3.6,
+        0, 12.8, 4.5,
+
+        // Neck (DCB, EFD, DFC)
+
+        0, 11.5, 4.9,
+        0.8, 12, 3.6,
+        0, 12.8, 4.5,
+
+        0, 2.8, 5.8,
+        1.6, 0, 3.2,
+        0, 11.5, 4.9,
+
+        0, 11.5, 4.9,
+        1.6, 0, 3.2,
+        0.8, 12, 3.6,
+
+        // Body (EFK, FGK, KGJ, GHJ, JHI)
+
+        0, 2.8, 5.8,
+        1.6, 0, 3.2,
+        0, 3.8, 3.2,
+
+        1.6, 0, 3.2,
+        2.2, 0, -0.9,
+        0, 3.8, 3.2,
+
+        0, 3.8, 3.2,
+        2.2, 0, -0.9,
+        0, 4.6, -1.8,
+
+        2.2, 0, -0.9,
+        2.8, 0, -4.7,
+        0, 4.6, -1.8,
+
+        0, 4.6, -1.8,
+        2.8, 0, -4.7,
+        0, 6, -8.7,
+
+        /* ------ Points -------
+
+        A = (0, 10.4, 8.6)
+        B = (0, 12.8, 4.5)
+        C = (0.8, 12, 3.6)
+        D = (0, 11.5, 4.9)
+        E = (0, 2.8, 5.8)
+        F = (1.6, 0, 3.2)
+        G = (2.2, 0, -0.9)
+        H = (2.8, 0, -4.7)
+        I = (0, 6, -8.7)
+        J = (0, 4.6, -1.8)
+        K = (0, 3.8, 3.2)
+        L = (-2.8, 0, -4.7)
+        M = (-2.2, 0, -0.9)
+        N = (-1,6, 0, 3.2)
+        O = (-0.5, 12, 3.6)
+        
+        */
+
+    ]).map(x => x * scale);
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geometry.computeVertexNormals();
+
+    orig3.position.set(x, y, z);
+    orig3.castShadow = true;
+
+    const mesh = new THREE.Mesh(geometry, origamiPhongMaterial);
+    const mirror = mesh.clone().applyMatrix4(new THREE.Matrix4().makeScale(1, 1, -1));
+
+    //     var blueMaterial = new THREE.MeshPhongMaterial( {color: 0x0000FF } );
+    // var redMaterial = new THREE.MeshPhongMaterial({ color:0xFF0000 });
+    // var meshFaceMaterial = new THREE.MeshFaceMaterial( [ blueMaterial, redMaterial ] );
+
+    // var boxGeometry = new THREE.BoxGeometry( 10, 10, 10 );
+
+    // for ( var face in boxGeometry.faces ) {
+    //     boxGeometry.faces[ face ].materialIndex = 0;
+    // }
+
+    // var sphereGeometry = new THREE.SphereGeometry( 5, 16, 16 );
+    // sphereGeometry.applyMatrix( new THREE.Matrix4().makeTranslation(0, 5, 0) );
+
+    // var mergeGeometry = new THREE.Geometry();
+    // mergeGeometry.merge( boxGeometry, boxGeometry.matrix );
+    // mergeGeometry.merge( sphereGeometry, sphereGeometry.matrix, 1 );
+
+    // var mesh = new THREE.Mesh( mergeGeometry, meshFaceMaterial );
+    // scene.add( mesh );
+
+    orig3.add(mesh);
+    orig3.add(mirror);
+    //orig3.scale.multiply(new THREE.Vector3(1, 1, -1));
+
+    meshes.push(mesh);
+    materials.push(origamiPhongMaterial);
+    materials.push(origamiLambMaterial);
+    materials.push(origamiBasicMaterial);
+    primitives.push(orig3);
+
+    scene.add(orig3);
+    // scene.add(mirror);
+
+    return orig3;
+}
+
 
 function createObjects() {
 
@@ -383,7 +511,6 @@ function createObjects() {
     scene.add(podium);
 
     // Duvida: VER SHADOWS DOS OBJECTOS
-    podium.castShadow = false;
     podium.receiveShadow = true;
 
     // add bump map and displacement map
@@ -433,19 +560,15 @@ function createObjects() {
 
     // Origamis
 
-    origami1 = createOrigami1(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8);
+    origami1 = createOrigami1(0, 1.3 * HEIGHT, LENGTH / 2 - LENGTH / 8);
 
-    origami2 = createOrigami2(0, 1.1 * HEIGHT, 0);
-        
-    /*origami1 = createPrimitive(0, 1.1 * HEIGHT, LENGTH / 2 - LENGTH / 8, 0, 0, 0, null,
-        new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
-        textureLoader.load('../textures/wood.jpg'), null);
-    origami2 = createPrimitive(0, 1.1 * HEIGHT, 0, 0, 0, 0, null,
-        new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
-        textureLoader.load('../textures/wood.jpg'), null);*/
-    origami3 = createPrimitive(0, 1.1 * HEIGHT, -LENGTH / 2 + LENGTH / 8, 0, 0, 0, null,
-        new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
-        textureLoader.load('../textures/wood.jpg'), null);
+    origami2 = createOrigami2(0, 1.3 * HEIGHT, 0);
+
+    origami3 = createOrigami3(0, 1.3 * HEIGHT, -LENGTH / 2 + LENGTH / 8);
+
+    // origami3 = createPrimitive(0, 1.3 * HEIGHT, -LENGTH / 2 + LENGTH / 8, 0, 0, 0, null,
+    //     new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
+    //     textureLoader.load('../textures/wood.jpg'), null);
 
     // --------------------------------
 
@@ -593,6 +716,7 @@ function setupLights() {
 
     // Directional Light
     dirLight = new THREE.DirectionalLight(0xFFFFFF, dirLightIntensity);
+    dirLight.castShadow = true;
     dirLight.position.set(LENGTH, 4 * HEIGHT, 0);
     lights.push(dirLight);
     scene.add(dirLight);
@@ -632,7 +756,7 @@ function init() {
 
     document.body.appendChild(renderer.domElement);
 
-    document.body.appendChild( VRButton.createButton( renderer ) );
+    document.body.appendChild(VRButton.createButton(renderer));
 
     createScenes();
     setupLights();
@@ -676,7 +800,7 @@ function animate() {
         var clockDelta = clock.getDelta();
         const rotationStep = deltaAngle * speed * clockDelta;
 
-        fluctuatingAnimation();
+        // fluctuatingAnimation();
 
         // Rotation
         if (keyPressed[81] == true || keyPressed[113] == true) { //Q or q
