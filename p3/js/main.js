@@ -103,10 +103,10 @@ function createPauseScreen() {
         color: 0xFFFFFF,
         map: new THREE.TextureLoader().load('../textures/paused.jpg'),
         transparent: true,
-        opacity: 0.6
+        opacity: 0.55
     });
 
-    const geometry = new THREE.PlaneGeometry(100, 60);
+    const geometry = new THREE.PlaneGeometry(118, 65);
     const mesh = new THREE.Mesh(geometry, material);
 
     plane.position.set(0, 1.5 * HEIGHT, 0);
@@ -833,7 +833,7 @@ function init() {
 
     camera = perspectiveCamera;
 
-    pauseCamera = createOrthographicCamera(10 * cameraDist, 0, 0);
+    pauseCamera = createOrthographicCamera(3 * cameraDist, cameraDist, 0);
     pauseCamera.lookAt(podium.position.x, podium.position.y + cameraDist / 2.1, podium.position.z);
     pauseScene.add(pauseCamera);
     createPauseScreen();
