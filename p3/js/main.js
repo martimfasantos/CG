@@ -263,14 +263,14 @@ function onWindowResize() {
     resizeCameras();
 }
 
-function createOrigami1(x, y, z) {
+function createOrigami1(x, y, z, texture) {
 
     const orig1 = new THREE.Object3D();
     const scale = 7;
 
-    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
-    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
-    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
+    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture  });
+    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture  });
+    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture  });
 
     const geometry = new THREE.BufferGeometry();
 
@@ -284,6 +284,13 @@ function createOrigami1(x, y, z) {
         0, scale, 0,
     ]);
 
+    const uvs = new Float32Array([
+        0,0, 0.5,0, 0,0.5,
+
+        0,0.5, 0.5,0, 0.5,0.5,
+    ]);
+
+    geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     geometry.computeVertexNormals();
 
@@ -306,23 +313,23 @@ function createOrigami1(x, y, z) {
 
 }
 
-function createOrigami2(x, y, z) {
+function createOrigami2(x, y, z, texture) {
 
     const orig2 = new THREE.Object3D();
     const scale = 7;
 
-    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
-    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
-    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
+    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture  });
+    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture  });
+    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture  });
 
     const geometry = new THREE.BufferGeometry();
 
     const vertices = new Float32Array([
 
 
-        scale / 10, -scale, 0,
-        -scale / 10, scale / 4, -scale / 2,
-        0, scale, 0,
+        scale / 10, -scale, 0,               //1,-10,0
+        -scale / 10, scale / 4, -scale / 2,  //-1,2.5,-5
+        0, scale, 0,                         //0,10,0
 
         0, scale, 0,
         -scale / 10, scale / 4, scale / 2,
@@ -330,7 +337,14 @@ function createOrigami2(x, y, z) {
 
 
     ]);
+    
+    const uvs = new Float32Array([
+        0.75,0.75, 0,0.25, 0,0,
 
+        0,0, 0.25,0, 0.75,0.75,
+    ]);
+
+    geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     geometry.computeVertexNormals();
 
@@ -352,14 +366,14 @@ function createOrigami2(x, y, z) {
 
 }
 
-function createOrigami3(x, y, z) {
+function createOrigami3(x, y, z, texture) {
 
     const orig3 = new THREE.Object3D();
     const scale = 1.2;
 
-    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
-    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
-    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide /*, map: texture */ });
+    origamiPhongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture  });
+    origamiLambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture  });
+    origamiBasicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture  });
 
     var geometry = new THREE.BufferGeometry();
 
@@ -368,41 +382,41 @@ function createOrigami3(x, y, z) {
         // TODO: AJUSTAR PONTOS
 
         // Head (ACB)
-        0, 10.4, 8.6,
-        0.8, 12, 3.6,
-        0, 12.8, 4.5,
+        0, 6.4, 8.6,
+        0.8, 8, 3.6,
+        0, 8.8, 4.5,
 
         // Neck (DCB, EFD, DFC)
 
-        0, 11.5, 4.9,
-        0.8, 12, 3.6,
-        0, 12.8, 4.5,
+        0, 7.5, 4.9,
+        0.8, 8, 3.6,
+        0, 8.8, 4.5,
 
-        0, 2.8, 5.8,
-        1.6, 0, 3.2,
-        0, 11.5, 4.9,
+        0, -2.8, 5.8,
+        1.6, -4, 3.2,
+        0, 7.5, 4.9,
 
-        0, 11.5, 4.9,
-        1.6, 0, 3.2,
-        0.8, 12, 3.6,
+        0, 7.5, 4.9,
+        1.6, -4, 3.2,
+        0.8, 8, 3.6,
 
         // Body (EFJ, FGJ, GHJ, EHI)
 
-        0, 2.8, 5.8,
-        1.6, 0, 3.2,
-        1.6, 4.6, -1.8,
+        0, -2.8, 5.8,
+        1.6, -4, 3.2,
+        1.6, 0.6, -1.8,
 
-        1.6, 0, 3.2,
-        2.4, 0, -0.9,
-        1.6, 4.6, -1.8,
+        1.6, -4, 3.2,
+        2.4, -4, -0.9,
+        1.6, 0.6, -1.8,
 
-        2.4, 0, -0.9,
-        3, 0, -4.7,
-        1.6, 4.6, -1.8,
+        2.4, -4, -0.9,
+        3, -4, -4.7,
+        1.6, 0.6, -1.8,
 
-        0, 2.8, 5.8,
-        3, 0, -4.7,
-        0, 6, -8.7,
+        0, -2.8, 5.8,
+        3, -4, -4.7,
+        0, 2, -8.7,
 
         /* ------ Points -------
 
@@ -426,6 +440,26 @@ function createOrigami3(x, y, z) {
         */
 
     ]).map(x => x * scale);
+
+    
+    const uvs = new Float32Array([
+        //HEAD
+        0,0,   0,0.5,   0.5,0, 
+
+        //NECK
+        0,0,   0.5,0.5, 0.5,0,
+        0,0,   0.5,0,   0, 0.5,
+        1,0,   0,1,     0,0,
+
+        //BODY
+        0,0,   0.5,0.5, 0.5,0,
+        0,0,   0.5,0,   0, 0.5,
+        1,0,   0,1,     0,0,
+        0,0,   1,1,     0,1,
+
+    ]);
+
+    geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
 
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     const mirror = geometry.clone().applyMatrix4(new THREE.Matrix4().makeScale(-1, 1, 1));
@@ -549,11 +583,11 @@ function createObjects() {
 
     // Origamis
 
-    origami1 = createOrigami1(0, 1.3 * HEIGHT, LENGTH / 2 - LENGTH / 8);
+    origami1 = createOrigami1(0, 1.3 * HEIGHT, LENGTH / 2 - LENGTH / 8, textureLoader.load('../textures/origamiTexture.jpg'));
 
-    origami2 = createOrigami2(0, 1.3 * HEIGHT, 0);
+    origami2 = createOrigami2(0, 1.3 * HEIGHT, 0, textureLoader.load('../textures/origamiTexture.jpg'));
 
-    origami3 = createOrigami3(0, 1.3 * HEIGHT, -LENGTH / 2 + LENGTH / 8);
+    origami3 = createOrigami3(0, 1.3 * HEIGHT, -LENGTH / 2 + LENGTH / 8, textureLoader.load('../textures/origamiTexture.jpg'));
 
     // origami3 = createPrimitive(0, 1.3 * HEIGHT, -LENGTH / 2 + LENGTH / 8, 0, 0, 0, null,
     //     new THREE.BoxGeometry(10, 10, 10, 25, 25), THREE.DoubleSide,
