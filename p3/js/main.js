@@ -38,6 +38,7 @@ const spotLightIntensity = 0.7;
 // Arrays
 var cameras = [];
 var materials = [];
+var origMaterials = [];
 var primitives = [];
 var lights = [];
 var keyPressed = [];
@@ -54,7 +55,7 @@ var origami1, origami2, origami3;
 // Variables
 var chosenSpotlight, chosenBulb;
 var isPaused = false;
-var pausedTime = 0;
+var timeOffset = 0;
 var activeMaterial = PHONG;
 var lastMaterial = undefined;
 
@@ -87,7 +88,7 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
     primitive.userData = {
         initialPos: new THREE.Vector3(x, y, z),
         initialRot: new THREE.Vector3(angleX, angleY, angleZ),
-        initialText: texture
+        initialMat: phongMaterial
     }
     scene.add(primitive);
 
@@ -100,7 +101,16 @@ function createFloor(x, y, z, texture) {
     const floor = new THREE.Object3D();
     const textureLoader = new THREE.TextureLoader();
 
-    const phongMaterial = new THREE.MeshPhongMaterial({ wireframe: false, side: THREE.DoubleSide, map: texture, bumpMap: textureLoader.load('../textures/cobblestone_bump.jpg') });
+    texture.wrapS = texture.wrapT = THREE.RepeatWrappping;
+    texture.repeat.set(16, 16);
+    texture.encoding = THREE.sRGBEncoding;
+
+    const bumpMap = textureLoader.load('../textures/cobblestone_bump.jpg');
+    bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrappping;
+    bumpMap.repeat.set(16, 16);
+    bumpMap.encoding = THREE.sRGBEncoding;
+
+    const phongMaterial = new THREE.MeshPhongMaterial({ wireframe: false, side: THREE.DoubleSide, map: texture, bumpMap: bumpMap });
     const lambMaterial = new THREE.MeshLambertMaterial({ wireframe: false, side: THREE.DoubleSide, map: texture });
     const basicMaterial = new THREE.MeshBasicMaterial({ wireframe: false, side: THREE.DoubleSide, map: texture });
 
@@ -122,7 +132,7 @@ function createFloor(x, y, z, texture) {
     floor.userData = {
         initialPos: new THREE.Vector3(x, y, z),
         initialRot: new THREE.Vector3(Math.PI / 2, 0, 0),
-        initialText: texture
+        initialMat: phongMaterial
     }
     scene.add(floor);
 
@@ -191,10 +201,13 @@ function resetInitialState() {
         primitives[i].rotation.z = primitives[i].userData.initialRot.z;
 
         // Meshes
-        meshes[i].material.dispose();
-        meshes[i].material = materials[3 * i];
-        meshes[i].material.map = primitives[i].userData.initialText;
-        meshes[i].material.needsUpdate = true;
+        const origami = false ? (i < primitives.length - 3) : true
+        if (!origami) {
+            meshes[i].material.dispose();
+            meshes[i].material = materials[3 * i];
+            meshes[i].material.map = primitives[i].userData.initialMesmesh
+            meshes[i].material.needsUpdate = true;
+        }
     }
 
     // Reset lights
@@ -467,7 +480,7 @@ function onKeyDown(e) {
             isPaused = (!isPaused) ? true : false;
             if (isPaused) {
                 clock.stop();
-                pausedTime += clock.getElapsedTime() % (2 * Math.PI);
+                timeOffset += clock.getElapsedTime() % (2 * Math.PI);
             } else {
                 clock.start();
             }
@@ -601,9 +614,9 @@ function fluctuatingAnimation() {
 
     const time = clock.getElapsedTime();
 
-    origami1.position.y += Math.sin(time + pausedTime + 0.5) * 0.02;
-    origami2.position.y += Math.sin(time + pausedTime) * 0.02;
-    origami3.position.y += Math.sin(time + pausedTime + 1.2) * 0.02;
+    origami1.position.y += Math.sin(time + timeOffset + 0.3) * 0.02;
+    origami2.position.y += Math.sin(time + timeOffset) * 0.02;
+    origami3.position.y += Math.sin(time + timeOffset + 0.6) * 0.02;
 
 }
 
