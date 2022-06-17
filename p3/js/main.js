@@ -32,7 +32,7 @@ const cameraOffset = 10;
 const viewSize = 90;
 
 // Lights
-const dirLightIntensity = 0.8;
+const dirLightIntensity = 0.9;
 const spotLightIntensity = 0.7;
 
 // Arrays
@@ -48,15 +48,15 @@ var textures = [];
 // Objects
 var dirLight, spotLight1, spotLight2, spotLight3;
 var bulb1, bulb2, bulb3;
-var podium;
+var floor, podium;
 var origami1, origami2, origami3;
 
 // Variables
 var chosenSpotlight, chosenBulb;
 var isPaused = false;
+var pausedTime = 0;
 var activeMaterial = PHONG;
 var lastMaterial = undefined;
-
 
 function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side, texture, bump) {
 
@@ -95,6 +95,58 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
 
 }
 
+function createFloor(x, y, z, texture) {
+
+    const floor = new THREE.Object3D();
+    const textureLoader = new THREE.TextureLoader();
+
+    const phongMaterial = new THREE.MeshPhongMaterial({ wireframe: false, side: THREE.DoubleSide, map: texture, bumpMap: textureLoader.load('../textures/cobblestone_bump.jpg') });
+    const lambMaterial = new THREE.MeshLambertMaterial({ wireframe: false, side: THREE.DoubleSide, map: texture });
+    const basicMaterial = new THREE.MeshBasicMaterial({ wireframe: false, side: THREE.DoubleSide, map: texture });
+
+    const geometry = new THREE.PlaneGeometry(1500, 1500, 200, 200);
+    const mesh = new THREE.Mesh(geometry, phongMaterial);
+    mesh.receiveShadow = true;
+
+    floor.position.set(x, y, z);
+    floor.rotateX(Math.PI / 2);
+    floor.add(mesh);
+
+    textures.push(texture);
+    meshes.push(mesh);
+    materials.push(phongMaterial);
+    materials.push(lambMaterial);
+    materials.push(basicMaterial);
+    primitives.push(floor);
+
+    floor.userData = {
+        initialPos: new THREE.Vector3(x, y, z),
+        initialRot: new THREE.Vector3(Math.PI / 2, 0, 0),
+        initialText: texture
+    }
+    scene.add(floor);
+
+    return floor;
+
+}
+
+function createPodium() {
+
+    const textureLoader = new THREE.TextureLoader();
+
+    const podium = new THREE.Object3D()
+        .add(createPrimitive(0, 0, 0, 0, 0, 0, null,
+            new THREE.BoxGeometry(1.5 * WIDTH, HEIGHT, LENGTH, 25, 25), THREE.DoubleSide,
+            textureLoader.load('../textures/wood.jpg'), null))
+        .add(createPrimitive(-1.25 * WIDTH, HEIGHT, 0, 0, 0, 0, null,
+            new THREE.BoxGeometry(WIDTH, 3 * HEIGHT, LENGTH, 25, 25), THREE.DoubleSide,
+            textureLoader.load('../textures/wood.jpg'), null))
+    scene.add(podium);
+
+    return podium;
+
+}
+
 function createPauseScreen() {
 
     const plane = new THREE.Object3D();
@@ -103,10 +155,10 @@ function createPauseScreen() {
         color: 0xFFFFFF,
         map: new THREE.TextureLoader().load('../textures/paused.jpg'),
         transparent: true,
-        opacity: 0.55
+        opacity: 0.5
     });
 
-    const geometry = new THREE.PlaneGeometry(118, 65);
+    const geometry = new THREE.PlaneGeometry(120, 80);
     const mesh = new THREE.Mesh(geometry, material);
 
     plane.position.set(0, 1.5 * HEIGHT, 0);
@@ -261,383 +313,18 @@ function onWindowResize() {
     resizeCameras();
 }
 
-function createOrigami1(x, y, z, texture) {
-
-    const orig1 = new THREE.Object3D();
-    const scale = 0.85;
-
-    const phongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture });
-    const lambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture });
-    const basicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide , map: texture });
-
-    const geometry = new THREE.BufferGeometry();
-
-    const vertices = new Float32Array([
-
-        // CBA
-        0, 0, 0,
-        -1.1, 10.7, -10.7,
-        -0.3, 21.4, 0,
-
-        // CAD
-        0, 0, 0,
-        -0.3, 21.4, 0,
-        -1.1, 10.7, 10.7,
-
-        /* ------ POINTS -------
-
-        A = (-0.3, 21.4, 0)
-        B = (-1.1, 10.7, -10.7)
-        C = (0, 0, 0)
-        D = (-1.1, 10.7, 10.7)
-        
-        */
-
-    ]).map(x => x * scale);
-
-    const uvs = new Float32Array([
-        0,0, 0.5,0, 0,0.5,
-
-        0,0.5, 0.5,0, 0.5,0.5,
-    ]);
-
-    geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    geometry.computeVertexNormals();
-
-    orig1.position.set(x, y, z);
-
-    const mesh = new THREE.Mesh(geometry, phongMaterial);
-    mesh.castShadow = true;
-
-    orig1.add(mesh);
-
-    meshes.push(mesh);
-    materials.push(phongMaterial);
-    materials.push(lambMaterial);
-    materials.push(basicMaterial);
-    primitives.push(orig1);
-
-    orig1.userData = {
-        initialPos: new THREE.Vector3(x, y, z),
-        initialRot: new THREE.Vector3(0, 0, 0),
-        /* initialText: texture */
-    }
-
-    scene.add(orig1);
-
-    return orig1;
-
-}
-
-function createOrigami2(x, y, z, texture) {
-
-    const orig2 = new THREE.Object3D();
-    const scale = 0.9;
-
-    const phongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, map: texture });
-    const lambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, map: texture });
-    const basicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, map: texture });
-
-    const geometry = new THREE.BufferGeometry();
-
-    const vertices = new Float32Array([
-
-        /* ------ FRONT ------ */
-        // CBA
-        0, 0, 0,
-        -0.8, 17.1, -3.9,
-        -0.3, 21.4, 0,
-
-        // CAD
-        0, 0, 0,
-        -0.3, 21.4, 0,
-        -0.8, 17.1, 3.9,
-
-        // CBE
-        0, 0, 0,
-        -0.8, 17.1, -3.9,
-        0.6, 15.7, -0.5,
-
-        // CFD
-        0, 0, 0,
-        0.6, 15.7, 0.5,
-        -0.8, 17.1, 3.9,
-
-        // CGE
-        0, 0, 0,
-        -0.8, 14.2, -3.5,
-        0.6, 15.7, -0.5,
-
-        // CFH
-        0, 0, 0,
-        0.6, 15.7, 0.5,
-        -0.8, 14.2, 3.5,
-
-        /* ------ BACK ------ */
-
-        // CGI
-        0, 0, 0,
-        -0.8, 14.2, -3.5,
-        -0.4, 14.2, -0.4,
-
-        // CHJ
-        0, 0, 0,
-        -0.8, 14.2, 3.5,
-        -0.4, 14.2, 0.4,
-
-
-        /* ------ POINTS -------
-
-        A = (-0.3, 21.4, 0)
-        B = (-0.8, 17.1, -3.9)
-        C = (0, 0, 0)
-        D = (-0.8, 17.1, 3.9)
-        E = (0.6, 15.7, -0.5)
-        F = (0.6, 15.7, 0.5)
-        G = (-0.8, 14.2, -3.5)
-        H = (-0.8, 14.2, 3.5)
-        I = (-0.4, 14.2, -0.4)
-        J = (-0.4, 14.2, 0.4)
-
-        scale / 10, -scale, 0,               //1,-10,0
-        -scale / 10, scale / 4, -scale / 2,  //-1,2.5,-5
-        0, scale, 0,                         //0,10,0
-
-        0, scale, 0,
-        -scale / 10, scale / 4, scale / 2,
-        scale / 10, -scale, 0,
-
-
-    ]);*/
-    
-    ]).map(x => x * scale);
-    
-    const uvs = new Float32Array([
-        0.75,0.75, 0,0.25, 0,0,
-
-        0,0, 0.25,0, 0.75,0.75,
-
-        0,0, 0.25,0, 0.75,0.75,
-
-        0,0, 0.25,0, 0.75,0.75,
-
-        0,0, 0.25,0, 0.75,0.75,
-
-        0,0, 0.25,0, 0.75,0.75,
-
-        0,0, 0.25,0, 0.75,0.75,
-
-        0,0, 0.25,0, 0.75,0.75,
-    ]);
-
-    geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    geometry.computeVertexNormals();
-
-    orig2.position.set(x, y, z);
-
-    const mesh = new THREE.Mesh(geometry, phongMaterial);
-    mesh.castShadow = true;
-
-    meshes.push(mesh);
-
-    orig2.add(mesh);
-    materials.push(phongMaterial);
-    materials.push(lambMaterial);
-    materials.push(basicMaterial);
-    primitives.push(orig2);
-
-    orig2.userData = {
-        initialPos: new THREE.Vector3(x, y, z),
-        initialRot: new THREE.Vector3(0, 0, 0),
-        /* initialText: texture */
-    }
-
-    scene.add(orig2);
-
-    return orig2;
-
-}
-
-function createOrigami3(x, y, z, texture) {
-
-    const orig3 = new THREE.Object3D();
-    const scale = 1.2;
-
-    const phongMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, map: texture });
-    const lambMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, map: texture });
-    const basicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, map: texture });
-
-    var geometry = new THREE.BufferGeometry();
-
-    const vertices = new Float32Array([
-
-        /* ------ HEAD ------ */
-        // ACB
-        0, 10.4, 8.6,
-        0.8, 12, 3.6,
-        0, 12.8, 4.5,
-
-        /* ------ NECK ------ */
-        // DCB
-        0, 11.5, 4.9,
-        0.8, 12, 3.6,
-        0, 12.8, 4.5,
-
-        // EFD
-        0, 2.8, 5.8,
-        1.6, 0, 3.2,
-        0, 11.5, 4.9,
-
-        //DFC
-        0, 11.5, 4.9,
-        1.6, 0, 3.2,
-        0.8, 12, 3.6,
-
-        /* ------ BODY ------ */
-        // EFJ
-        0, 2.8, 5.8,
-        1.6, 0, 3.2,
-        1.6, 4.6, -2.4,
-
-        // FGJ
-        1.6, 0, 3.2,
-        2.4, -0.2, -0.9,
-        1.6, 4.6, -2.4,
-
-        //EGJ
-        0, 2.8, 5.8,
-        2.4, -0.2, -0.9,
-        1.6, 4.6, -2.4,
-
-        // EFI
-        0, 2.8, 5.8,
-        1.6, 0, 3.2,
-        0, 6, -8.7,
-
-        // FHI
-        1.6, 0, 3.2,
-        3, 0, -4.7,
-        0, 6, -8.7,
-
-        //FHJ
-        1.6, 0, 3.2,
-        3, 0, -4.7,
-        1.6, 4.6, -2.4,
-
-        //FGP
-        1.6, 0, 3.2,
-        2.4, -0.2, -0.9,
-        0.3, 2.7, -0.3,
-
-        //EFP
-        0, 2.8, 5.8,
-        1.6, 0, 3.2,
-        0.3, 2.7, -0.3,
-
-        /* ------ POINTS -------
-
-        A = (0, 10.4, 8.6)
-        B = (0, 12.8, 4.5)
-        C = (0.8, 12, 3.6)
-        D = (0, 11.5, 4.9)
-        E = (0, 2.8, 5.8)
-        F = (1.6, 0, 3.2)
-        G = (2.4, -0.2, -0.9)
-        H = (3, 0, -4.7)
-        I = (0, 6, -8.7)
-        J = (1.6, 4.6, -2.4)
-        K = (0, 3.8, 3.2)
-        L = (-2.8, 0, -4.7)
-        M = (-2.4, -0.2, -0.9)
-        N = (-1,6, 0, 3.2)
-        O = (-0.5, 12, 3.6)
-        P = (0.3, 3.5, -0.3)
-        
-        */
-
-    ]).map(x => x * scale);
-
-    
-    const uvs = new Float32Array([
-        //HEAD
-        0,0,   0,0.5,   0.5,0, 
-
-        //NECK
-        0,0,   0.5,0.5, 0.5,0,
-        0,0,   0.5,0,   0, 0.5,
-        1,0,   0,1,     0,0,
-
-        //BODY
-        0,0,   0.5,0.5, 0.5,0,
-        0,0,   0.5,0,   0, 0.5,
-        1,0,   0,1,     0,0,
-        0,0,   1,1,     0,1,
-        0,0,   0.5,0.5, 0.5,0,
-        0,0,   0.5,0,   0, 0.5,
-        1,0,   0,1,     0,0,
-        0,0,   1,1,     0,1,
-
-    ]);
-
-    geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-
-    const mirror = geometry.clone().applyMatrix4(new THREE.Matrix4().makeScale(-1, 1, 1));
-    geometry = THREE.BufferGeometryUtils.mergeBufferGeometries([geometry, mirror]);
-
-    geometry.computeVertexNormals();
-
-    orig3.position.set(x, y, z);
-
-    const mesh = new THREE.Mesh(geometry, phongMaterial);
-    mesh.castShadow = true;
-
-    orig3.add(mesh);
-    meshes.push(mesh);
-    materials.push(phongMaterial);
-    materials.push(lambMaterial);
-    materials.push(basicMaterial);
-    primitives.push(orig3);
-
-    orig3.userData = {
-        initialPos: new THREE.Vector3(x, y, z),
-        initialRot: new THREE.Vector3(0, 0, 0),
-        /* initialText: texture */
-    }
-
-    scene.add(orig3);
-
-    return orig3;
-}
-
-
 function createObjects() {
 
     const textureLoader = new THREE.TextureLoader();
 
     // Floor
-    createPrimitive(0, 0, 0, Math.PI / 2, 0, 0, null,
-        new THREE.PlaneGeometry(200, 200, 100, 100), THREE.DoubleSide,
-        textureLoader.load('../textures/cobblestone.jpg'),
-        textureLoader.load('../textures/cobblestone_bump.jpg'));
+    floor = createFloor(0, 0, 0, textureLoader.load('../textures/cobblestone.jpg'));
 
+    // add bump map and displacement map
     // --------------------------------
 
     // Podium
-
-    podium = new THREE.Object3D()
-        .add(createPrimitive(0, 0, 0, 0, 0, 0, null,
-            new THREE.BoxGeometry(1.5 * WIDTH, HEIGHT, LENGTH, 25, 25), THREE.DoubleSide,
-            textureLoader.load('../textures/wood.jpg'), null))
-        .add(createPrimitive(-1.25 * WIDTH, HEIGHT, 0, 0, 0, 0, null,
-            new THREE.BoxGeometry(WIDTH, 3 * HEIGHT, LENGTH, 25, 25), THREE.DoubleSide,
-            textureLoader.load('../textures/wood.jpg'), null))
-    scene.add(podium);
-
-    // add bump map and displacement map
+    podium = createPodium();
 
     // --------------------------------
 
@@ -645,7 +332,7 @@ function createObjects() {
 
     /* --- Support --- */
     createPrimitive(0, 4 * HEIGHT + 2, 0, Math.PI / 2, 0, 0, null,
-        new THREE.CylinderGeometry(0.3, 0.3, LENGTH), THREE.DoubleSide,
+        new THREE.CylinderGeometry(0.3, 0.3, LENGTH + 5), THREE.DoubleSide,
         textureLoader.load('../textures/metal.jpg'), null);
     createPrimitive(0, (4 * HEIGHT + 2) / 2, LENGTH / 2 + 0.3, 0, 0, 0, null,
         new THREE.CylinderGeometry(0.3, 0.3, 4 * HEIGHT + 2), THREE.DoubleSide,
@@ -688,7 +375,7 @@ function createObjects() {
 
     origami2 = createOrigami2(0, 0.75 * HEIGHT, 0, textureLoader.load('../textures/origamiTexture.jpg'));
 
-    origami3 = createOrigami3(0, 0.75 * HEIGHT, -LENGTH / 2 + LENGTH / 8, textureLoader.load('../textures/origamiTexture.jpg'));
+    origami3 = createOrigami3(0, 0.8 * HEIGHT, -LENGTH / 2 + LENGTH / 8, textureLoader.load('../textures/origamiTexture.jpg'));
 
     // --------------------------------
 
@@ -778,6 +465,12 @@ function onKeyDown(e) {
 
         case 32:  //Space
             isPaused = (!isPaused) ? true : false;
+            if (isPaused) {
+                clock.stop();
+                pausedTime += clock.getElapsedTime() % (2 * Math.PI);
+            } else {
+                clock.start();
+            }
             break;
         case 51:  //3
             if (isPaused) resetInitialState();
@@ -824,10 +517,10 @@ function render() {
 
 function setupLights() {
     'use strict';
-    const ambLight = new THREE.AmbientLight(0xF7F7F7, 0.3);
+    const ambLight = new THREE.AmbientLight(0xF7F7F7, 0.2);
     scene.add(ambLight);
 
-    const ambLightPause = new THREE.AmbientLight(0xF7F7F7, 0.3);
+    const ambLightPause = new THREE.AmbientLight(0xF7F7F7, 0.2);
     pauseScene.add(ambLightPause);
 
     // Directional Light
@@ -908,9 +601,9 @@ function fluctuatingAnimation() {
 
     const time = clock.getElapsedTime();
 
-    origami1.position.y += Math.sin(time + 0.8) * 0.02;
-    origami2.position.y += Math.sin(time) * 0.02;
-    origami3.position.y += Math.sin(time + 1.6) * 0.02;
+    origami1.position.y += Math.sin(time + pausedTime + 0.5) * 0.02;
+    origami2.position.y += Math.sin(time + pausedTime) * 0.02;
+    origami3.position.y += Math.sin(time + pausedTime + 1.2) * 0.02;
 
 }
 
@@ -922,7 +615,7 @@ function animate() {
         var clockDelta = clock.getDelta();
         const rotationStep = deltaAngle * speed * clockDelta;
 
-        // fluctuatingAnimation();
+        fluctuatingAnimation();
 
         // Rotation
         if (keyPressed[81] == true || keyPressed[113] == true) { //Q or q
