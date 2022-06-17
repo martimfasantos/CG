@@ -41,7 +41,7 @@ function createOrigami1(x, y, z, texture) {
         0, 0, 9.45, 0, 0, 12.6,
         0, 0, 0, 12.6, 9.45, 0,
 
-    ]).map(x => x / 21 );
+    ]).map(x => x / 21);
 
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
@@ -131,7 +131,6 @@ function createOrigami2(x, y, z, texture) {
         -0.8, 14.2, 3.6,
 
         /* ------ BACK ------ */
-
         // CIG
         0, 0, 0,
         -0.4, 14.2, -0.4,
@@ -170,7 +169,7 @@ function createOrigami2(x, y, z, texture) {
         0, 0, 0, 7.35, 3.15, 8.4,
         0, 2, 7.35, 0, 8.4, 3.15,
 
-    ]).map(x => x / 21 );
+    ]).map(x => x / 21);
 
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));

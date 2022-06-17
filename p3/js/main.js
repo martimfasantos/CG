@@ -88,7 +88,7 @@ function createPrimitive(x, y, z, angleX, angleY, angleZ, color, geometry, side,
     primitive.userData = {
         initialPos: new THREE.Vector3(x, y, z),
         initialRot: new THREE.Vector3(angleX, angleY, angleZ),
-        initialMat: phongMaterial
+        initialText: texture
     }
     scene.add(primitive);
 
@@ -132,7 +132,7 @@ function createFloor(x, y, z, texture) {
     floor.userData = {
         initialPos: new THREE.Vector3(x, y, z),
         initialRot: new THREE.Vector3(Math.PI / 2, 0, 0),
-        initialMat: phongMaterial
+        initialText: texture
     }
     scene.add(floor);
 
@@ -201,11 +201,11 @@ function resetInitialState() {
         primitives[i].rotation.z = primitives[i].userData.initialRot.z;
 
         // Meshes
-        const origami = false ? (i < primitives.length - 3) : true
+        const origami = (i < primitives.length - 3) ? false : true
         if (!origami) {
             meshes[i].material.dispose();
             meshes[i].material = materials[3 * i];
-            meshes[i].material.map = primitives[i].userData.initialMesmesh
+            meshes[i].material.map = primitives[i].userData.initialText;
             meshes[i].material.needsUpdate = true;
         }
     }
@@ -223,12 +223,17 @@ function resetInitialState() {
 
 function toggleSpotLight(spotLight, bulb) {
     'use strict';
+    var index = primitives.findIndex(x => x === bulb);
     if (spotLight.intensity) {
         spotLight.intensity = 0;
-        bulb.children[0].material.map = new THREE.TextureLoader().load('../textures/bulbOFF.jpg');
+        for (var i = 0; i < 3; i++) {
+            materials[3 * index + i].map = new THREE.TextureLoader().load('../textures/bulbOFF.jpg');
+        }
     } else {
         spotLight.intensity = spotLightIntensity;
-        bulb.children[0].material.map = new THREE.TextureLoader().load('../textures/bulbON.jpg');
+        for (var i = 0; i < 3; i++) {
+            materials[3 * index + i].map = new THREE.TextureLoader().load('../textures/bulbON.jpg');
+        }
     }
     bulb.children[0].material.needsUpdate = true;
 
@@ -249,7 +254,6 @@ function toggleLightCalculation() {
         replaceMeshes(BASIC);
         lastMaterial = activeMaterial;
         activeMaterial = BASIC;
-        console.log("changed to basic\n");
     }
 }
 
@@ -614,9 +618,9 @@ function fluctuatingAnimation() {
 
     const time = clock.getElapsedTime();
 
-    origami1.position.y += Math.sin(time + timeOffset + 0.3) * 0.02;
+    origami1.position.y += Math.sin(time + timeOffset + 0.1) * 0.02;
     origami2.position.y += Math.sin(time + timeOffset) * 0.02;
-    origami3.position.y += Math.sin(time + timeOffset + 0.6) * 0.02;
+    origami3.position.y += Math.sin(time + timeOffset + 0.2) * 0.02;
 
 }
 
